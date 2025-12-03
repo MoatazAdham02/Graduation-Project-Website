@@ -1,0 +1,102 @@
+.heart-3d-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading state */
+.heart-3d-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+/* Auth page specific styling */
+.heart-3d-auth {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  position: relative;
+}
+
+.heart-3d-auth::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(231, 76, 60, 0.1) 0%, transparent 70%);
+  animation: pulse-glow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Login/Register page styling */
+.heart-3d-form {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .heart-3d-auth {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .heart-3d-form {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heart-3d-auth {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .heart-3d-form {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .heart-3d-auth,
+[data-theme="dark"] .heart-3d-form {
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.2) 0%, transparent 70%);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+[data-theme="dark"] .heart-3d-auth::before {
+  background: radial-gradient(circle, rgba(231, 76, 60, 0.2) 0%, transparent 70%);
+}
+

@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import HeartIntro from './components/HeartIntro'
 import AuthLanding from './components/AuthLanding'
 import Login from './components/Login'
 import Register from './components/Register'
@@ -29,7 +30,8 @@ function App() {
           <NotificationProvider>
             <Router>
               <Routes>
-                <Route path="/" element={<AuthLanding />} />
+                <Route path="/" element={<HeartIntro />} />
+                <Route path="/auth-landing" element={<AuthLanding />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />

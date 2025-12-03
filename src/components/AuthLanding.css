@@ -48,25 +48,42 @@
 }
 
 .heart-icon {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 30px;
+  position: relative;
+}
+
+.heart-3d-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fallback for when 3D model is loading */
+.heart-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 100px;
   height: 100px;
-  margin: 0 auto 30px;
-  color: #e74c3c;
+  background: radial-gradient(circle, rgba(231, 76, 60, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
   animation: heartbeat 1.5s ease-in-out infinite;
+  z-index: -1;
 }
 
 @keyframes heartbeat {
   0%, 100% {
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
   }
   50% {
-    transform: scale(1.1);
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
   }
-}
-
-.heart-icon svg {
-  width: 100%;
-  height: 100%;
 }
 
 .landing-header h1 {

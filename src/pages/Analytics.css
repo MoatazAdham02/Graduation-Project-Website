@@ -1,7 +1,8 @@
 .analytics-page {
   padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .page-header {
@@ -19,6 +20,7 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 .stat-card {
@@ -70,6 +72,7 @@
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 20px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 .chart-card {
