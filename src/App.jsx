@@ -18,7 +18,43 @@ import { DataProvider } from './context/DataContext'
 import './App.css'
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading } = useAuth()
+  
+  // Wait for auth check to complete before redirecting
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        background: 'var(--bg-primary)'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: 'var(--text-primary)'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid rgba(102, 126, 234, 0.2)',
+            borderTopColor: '#667eea',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p>Loading...</p>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    )
+  }
+  
   return isAuthenticated ? children : <Navigate to="/login" replace />
 }
 

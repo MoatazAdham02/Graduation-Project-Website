@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
+import { useAuth } from '../context/AuthContext'
 import Navigation from '../components/Navigation'
 import { format } from 'date-fns'
 import { PDFDocument, rgb } from 'pdf-lib'
@@ -8,12 +9,39 @@ import { FiEdit, FiDownload, FiPrinter, FiFileText, FiClock, FiSave } from 'reac
 
 const Reports = () => {
   const { reports, studies, updateReport } = useData()
+  const { user } = useAuth()
   const [selectedReport, setSelectedReport] = useState(null)
   const [editingReport, setEditingReport] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
 
+  // Helper function to extract patient ID (handles both string and populated object)
+  const getPatientId = (patientId) => {
+    if (!patientId) return 'N/A'
+    if (typeof patientId === 'object' && patientId !== null) {
+      return patientId.patientId || patientId._id || 'N/A'
+    }
+    return patientId
+  }
+
+  // Helper function to extract patient name
+  const getPatientName = (report) => {
+    if (report.patientName) return report.patientName
+    if (typeof report.patientId === 'object' && report.patientId?.name) {
+      return report.patientId.name
+    }
+    return 'Unknown Patient'
+  }
+
   const handleEdit = (report) => {
-    setEditingReport({ ...report })
+    // Normalize report data - handle populated patientId
+    const normalizedReport = {
+      ...report,
+      patientName: report.patientName || (typeof report.patientId === 'object' && report.patientId?.name) || '',
+      patientId: typeof report.patientId === 'object' && report.patientId !== null
+        ? (report.patientId.patientId || report.patientId._id)
+        : report.patientId
+    }
+    setEditingReport(normalizedReport)
     setSelectedReport(report)
   }
 
@@ -45,7 +73,10 @@ const Reports = () => {
       y -= 40
 
       // Patient Info
-      page.drawText(`Patient: ${report.patientName}`, {
+      const patientName = getPatientName(report)
+      const patientId = getPatientId(report.patientId)
+      
+      page.drawText(`Patient: ${patientName}`, {
         x: 50,
         y,
         size: 12,
@@ -54,7 +85,7 @@ const Reports = () => {
       })
       y -= 20
 
-      page.drawText(`Patient ID: ${report.patientId}`, {
+      page.drawText(`Patient ID: ${patientId}`, {
         x: 50,
         y,
         size: 12,
@@ -119,7 +150,7 @@ const Reports = () => {
       y -= 20
 
       // Physician
-      page.drawText(`Physician: ${report.physician}`, {
+      page.drawText(`Physician: ${report.physicianName || report.physician || 'N/A'}`, {
         x: 50,
         y,
         size: 12,
@@ -141,7 +172,7 @@ const Reports = () => {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `Report_${report.patientName}_${report.reportDate}.pdf`
+      link.download = `Report_${patientName}_${report.reportDate || new Date().toISOString().split('T')[0]}.pdf`
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
@@ -157,8 +188,8 @@ const Reports = () => {
         <head><title>Medical Report</title></head>
         <body>
           <h1>Medical Report</h1>
-          <h2>Patient: ${report.patientName}</h2>
-          <p>Patient ID: ${report.patientId}</p>
+          <h2>Patient: ${getPatientName(report)}</h2>
+          <p>Patient ID: ${getPatientId(report.patientId)}</p>
           <p>Study Date: ${report.studyDate}</p>
           <h3>Findings:</h3>
           <ul>
@@ -168,8 +199,8 @@ const Reports = () => {
           <ul>
             ${report.recommendations?.map(r => `<li>${r}</li>`).join('')}
           </ul>
-          <p>Physician: ${report.physician}</p>
-          <p>Report Date: ${report.reportDate}</p>
+          <p>Physician: ${report.physicianName || report.physician || 'N/A'}</p>
+          <p>Report Date: ${report.reportDate || 'N/A'}</p>
         </body>
       </html>
     `)
@@ -182,7 +213,14 @@ const Reports = () => {
       <Navigation />
       <div className="reports-page">
       <div className="page-header">
-        <h1>Medical Reports</h1>
+        <div>
+          <h1>Medical Reports</h1>
+          {user && (
+            <p className="doctor-name">
+              Dr. {user.firstName} {user.lastName}
+            </p>
+          )}
+        </div>
         <div className="header-actions">
           <button onClick={() => setShowHistory(!showHistory)}>
             <FiClock /> View History
@@ -198,12 +236,12 @@ const Reports = () => {
           </div>
         ) : (
           reports.map(report => (
-            <div key={report.id} className="report-card">
+            <div key={report._id || report.id || report.reportId} className="report-card">
               <div className="report-header">
                 <div>
-                  <h3>{report.patientName}</h3>
+                  <h3>{getPatientName(report)}</h3>
                   <p className="report-meta">
-                    {report.modality} • {format(new Date(report.createdAt), 'MMM dd, yyyy')}
+                    {report.modality || 'N/A'} • {format(new Date(report.createdAt || report.reportDate || new Date()), 'MMM dd, yyyy')}
                   </p>
                 </div>
                 <div className="report-actions">
@@ -223,9 +261,15 @@ const Reports = () => {
                 <div className="report-section">
                   <h4>Patient Information</h4>
                   <div className="info-grid">
-                    <div><strong>Patient ID:</strong> {report.patientId}</div>
-                    <div><strong>Study Date:</strong> {report.studyDate}</div>
-                    <div><strong>Modality:</strong> {report.modality}</div>
+                    <div><strong>Patient ID:</strong> {getPatientId(report.patientId)}</div>
+                    <div><strong>Study Date:</strong> {
+                      report.studyDate 
+                        ? (typeof report.studyDate === 'string' 
+                            ? report.studyDate 
+                            : format(new Date(report.studyDate), 'MMM dd, yyyy'))
+                        : 'N/A'
+                    }</div>
+                    <div><strong>Modality:</strong> {report.modality || 'N/A'}</div>
                   </div>
                 </div>
 
@@ -252,7 +296,7 @@ const Reports = () => {
 
                 <div className="report-footer">
                   <div>
-                    <strong>Physician:</strong> {report.physician}
+                    <strong>Physician:</strong> {report.physicianName || report.physician || 'N/A'}
                   </div>
                   <div>
                     <strong>Version:</strong> {report.version || 1}
@@ -273,7 +317,7 @@ const Reports = () => {
                 <label>Patient Name</label>
                 <input
                   type="text"
-                  value={editingReport.patientName}
+                  value={getPatientName(editingReport)}
                   onChange={(e) => setEditingReport({ ...editingReport, patientName: e.target.value })}
                 />
               </div>

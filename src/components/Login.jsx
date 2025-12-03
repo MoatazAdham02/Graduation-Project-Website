@@ -113,12 +113,15 @@ const Login = () => {
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      login(formData.email, formData.rememberMe)
+    // Login via API
+    try {
+      await login(formData.email, formData.password, formData.rememberMe)
       navigate('/viewer')
+    } catch (error) {
+      setErrors({ submit: error.message || 'Login failed. Please check your credentials.' })
+    } finally {
       setIsSubmitting(false)
-    }, 500)
+    }
   }
 
   return (
@@ -149,7 +152,7 @@ const Login = () => {
               onChange={handleChange}
               onBlur={handleBlur}
               className={errors.email && touched.email ? 'error' : ''}
-              placeholder="doctor@medical.com"
+              placeholder="doctor@example.com"
             />
             {errors.email && touched.email && (
               <span className="error-message">{errors.email}</span>
@@ -172,6 +175,10 @@ const Login = () => {
               <span className="error-message">{errors.password}</span>
             )}
           </div>
+
+          {errors.submit && (
+            <div className="error-message submit-error">{errors.submit}</div>
+          )}
 
           <div className="form-options">
             <label className="remember-me">

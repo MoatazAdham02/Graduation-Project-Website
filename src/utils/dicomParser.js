@@ -50,6 +50,65 @@ export const parseDICOMFile = async (file) => {
         const pixelSpacing = dataSet.string('x00280030')
         const modality = dataSet.string('x00080060') || 'CT'
         
+        // Extract Patient Information (DICOM tags)
+        let patientName = dataSet.string('x00100010') || '' // Patient's Name
+        // DICOM names are often in format "LAST^FIRST^MIDDLE" or "LAST^FIRST"
+        if (patientName.includes('^')) {
+          const nameParts = patientName.split('^')
+          if (nameParts.length >= 2) {
+            patientName = `${nameParts[1] || ''} ${nameParts[0] || ''}`.trim() || patientName
+          }
+        }
+        const patientId = dataSet.string('x00100020') || '' // Patient ID
+        const patientBirthDate = dataSet.string('x00100030') || '' // Patient's Birth Date (YYYYMMDD)
+        const patientSex = dataSet.string('x00100040') || '' // Patient's Sex (M/F/O)
+        const patientAge = dataSet.string('x00101010') || '' // Patient's Age
+        
+        // Extract Study Information
+        const studyDate = dataSet.string('x00080020') || '' // Study Date (YYYYMMDD)
+        const studyTime = dataSet.string('x00080030') || '' // Study Time
+        const studyDescription = dataSet.string('x00081030') || '' // Study Description
+        const studyInstanceUID = dataSet.string('x0020000d') || '' // Study Instance UID
+        const seriesInstanceUID = dataSet.string('x0020000e') || '' // Series Instance UID
+        const seriesDescription = dataSet.string('x0008103e') || '' // Series Description
+        const bodyPartExamined = dataSet.string('x00180015') || '' // Body Part Examined
+        
+        // Extract Institution/Equipment Info
+        const institutionName = dataSet.string('x00080080') || '' // Institution Name
+        const manufacturer = dataSet.string('x00080070') || '' // Manufacturer
+        const manufacturerModelName = dataSet.string('x00081090') || '' // Manufacturer's Model Name
+        
+        // Format patient birth date from DICOM format (YYYYMMDD) to Date object
+        let formattedBirthDate = null
+        if (patientBirthDate && patientBirthDate.length >= 8) {
+          const year = patientBirthDate.substring(0, 4)
+          const month = patientBirthDate.substring(4, 6)
+          const day = patientBirthDate.substring(6, 8)
+          formattedBirthDate = new Date(`${year}-${month}-${day}`)
+        }
+        
+        // Format study date
+        let formattedStudyDate = null
+        if (studyDate && studyDate.length >= 8) {
+          const year = studyDate.substring(0, 4)
+          const month = studyDate.substring(4, 6)
+          const day = studyDate.substring(6, 8)
+          formattedStudyDate = new Date(`${year}-${month}-${day}`)
+        }
+        
+        // Map DICOM sex codes to our format
+        let gender = null
+        if (patientSex) {
+          const sexUpper = patientSex.toUpperCase()
+          if (sexUpper === 'M' || sexUpper === 'MALE') {
+            gender = 'male'
+          } else if (sexUpper === 'F' || sexUpper === 'FEMALE') {
+            gender = 'female'
+          } else {
+            gender = 'other'
+          }
+        }
+        
         // Extract pixel data (tag 7FE0,0010)
         const pixelDataElement = dataSet.elements.x7fe00010
         if (!pixelDataElement) {
@@ -128,7 +187,28 @@ export const parseDICOMFile = async (file) => {
           pixelSpacing: pixelSpacing,
           modality: modality,
           pixelData: scaledPixelData,
-          rawPixelData: pixelArray
+          rawPixelData: pixelArray,
+          // Patient Information
+          patient: {
+            name: patientName.trim(),
+            patientId: patientId.trim(),
+            dateOfBirth: formattedBirthDate,
+            gender: gender,
+            age: patientAge
+          },
+          // Study Information
+          study: {
+            studyDate: formattedStudyDate || new Date(),
+            studyTime: studyTime,
+            studyDescription: studyDescription,
+            studyInstanceUID: studyInstanceUID,
+            seriesInstanceUID: seriesInstanceUID,
+            seriesDescription: seriesDescription,
+            bodyPartExamined: bodyPartExamined,
+            institutionName: institutionName,
+            manufacturer: manufacturer,
+            manufacturerModelName: manufacturerModelName
+          }
         })
       } catch (error) {
         console.error('Error parsing DICOM file:', error)

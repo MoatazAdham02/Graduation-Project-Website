@@ -102,26 +102,19 @@ const Register = () => {
       return
     }
 
-    // Register user
+    // Register user via API
     try {
-      register({
+      await register({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email.trim(),
         password: formData.password
       })
       
-      // Redirect to login page after successful registration
-      setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            message: 'Registration successful! Please login with your credentials.' 
-          } 
-        })
-        setIsSubmitting(false)
-      }, 500)
+      // Redirect to viewer after successful registration (user is auto-logged in)
+      navigate('/viewer')
     } catch (error) {
-      setErrors({ submit: 'Registration failed. Please try again.' })
+      setErrors({ submit: error.message || 'Registration failed. Please try again.' })
       setIsSubmitting(false)
     }
   }

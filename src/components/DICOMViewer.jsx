@@ -168,44 +168,109 @@ const DICOMViewer = () => {
       imageId: `dicom://${file.name}`
     }))
 
+    // Extract patient and study data from first DICOM file
+    const firstDicomData = parsedData[0]
+    
     // Generate report
-    setTimeout(() => {
-      generateReport(validFiles[0])
-      setIsLoading(false)
-      setUploadProgress(0)
-      notifyStudyComplete(validFiles[0].name)
-      
-      // Save to context
-      const patient = addPatient({
-        name: 'John Doe',
-        id: 'P123456',
-        email: 'john.doe@example.com'
-      })
-      
-      const study = addStudy({
-        patientId: patient.id,
-        modality: 'CT',
-        description: 'CT Scan Study',
-        files: validFiles.map(f => f.name)
-      })
-
-      const generatedReport = addReport({
-        studyId: study.id,
-        patientId: patient.id,
-        ...report
-      })
-      
-      notifyReportReady(patient.name)
+    setTimeout(async () => {
+      try {
+        setIsLoading(false)
+        setUploadProgress(0)
+        notifyStudyComplete(validFiles[0].name)
+        
+        // Extract patient information from DICOM
+        const patientInfo = firstDicomData?.patient || {}
+        const studyInfo = firstDicomData?.study || {}
+        
+        // Create or find patient from DICOM data
+        let patient
+        if (patientInfo.patientId && patientInfo.name) {
+          try {
+            // Try to create patient with DICOM data
+            patient = await addPatient({
+              name: patientInfo.name,
+              patientId: patientInfo.patientId,
+              dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'), // Default if missing
+              gender: patientInfo.gender || 'other', // Default if missing
+              status: 'active'
+            })
+          } catch (error) {
+            // Patient might already exist, try to find by patientId
+            console.log('Patient creation error (might already exist):', error)
+            // For now, create with a unique ID if patientId exists but patient creation fails
+            const uniqueId = `${patientInfo.patientId}-${Date.now()}`
+            patient = await addPatient({
+              name: patientInfo.name,
+              patientId: uniqueId,
+              dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
+              gender: patientInfo.gender || 'other',
+              status: 'active'
+            })
+          }
+        } else {
+          // Fallback if DICOM doesn't have patient info
+          const fallbackId = `PAT-${Date.now()}`
+          patient = await addPatient({
+            name: patientInfo.name || 'Unknown Patient',
+            patientId: patientInfo.patientId || fallbackId,
+            dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
+            gender: patientInfo.gender || 'other',
+            status: 'active'
+          })
+        }
+        
+        // Create study from DICOM data
+        const study = await addStudy({
+          patientId: patient._id || patient.id,
+          studyId: studyInfo.studyInstanceUID || `STUDY-${Date.now()}`,
+          modality: firstDicomData?.modality || 'CT',
+          studyDate: studyInfo.studyDate || new Date(),
+          description: studyInfo.studyDescription || studyInfo.seriesDescription || 'DICOM Study',
+          bodyPart: studyInfo.bodyPartExamined || '',
+          files: validFiles.map(f => ({
+            fileName: f.name,
+            fileSize: f.size,
+            uploadedAt: new Date()
+          })),
+          dicomData: {
+            width: firstDicomData?.width,
+            height: firstDicomData?.height,
+            pixelSpacing: firstDicomData?.pixelSpacing,
+            sliceThickness: null // Can be extracted if available
+          }
+        })
+        
+        // Generate report data
+        const reportData = generateReport(validFiles[0], patientInfo, studyInfo)
+        
+        // Create report in database
+        const generatedReport = await addReport({
+          studyId: study._id || study.id,
+          patientId: patient._id || patient.id,
+          reportId: `RPT-${Date.now()}`,
+          findings: reportData.findings || [],
+          recommendations: reportData.recommendations || [],
+          physicianName: reportData.physician || '',
+          physicianTitle: 'MD',
+          reportDate: new Date()
+        })
+        
+        notifyReportReady(patient.name || 'Patient')
+      } catch (error) {
+        console.error('Error saving patient/study data:', error)
+        setIsLoading(false)
+        // Still show the images even if saving fails
+      }
     }, 500)
   }
 
-  const generateReport = (file) => {
+  const generateReport = (file, patientInfo = {}, studyInfo = {}) => {
     const simulatedReport = {
-      patientName: 'John Doe',
-      patientId: 'P123456',
-      studyDate: new Date().toLocaleDateString(),
-      modality: 'CT',
-      studyDescription: 'CT Scan - Cardiac Analysis',
+      patientName: patientInfo.name || 'Unknown Patient',
+      patientId: patientInfo.patientId || 'N/A',
+      studyDate: studyInfo.studyDate ? new Date(studyInfo.studyDate).toLocaleDateString() : new Date().toLocaleDateString(),
+      modality: dicomData[0]?.modality || 'CT',
+      studyDescription: studyInfo.studyDescription || studyInfo.seriesDescription || 'DICOM Study - Cardiac Analysis',
       findings: [
         { title: 'Heart Structure', value: 'Normal', status: 'normal' },
         { title: 'Left Ventricle Ejection Fraction', value: '65%', status: 'normal' },
@@ -222,6 +287,7 @@ const DICOMViewer = () => {
       reportDate: new Date().toLocaleDateString()
     }
     setReport(simulatedReport)
+    return simulatedReport // Return for database storage
   }
 
   const handleFileChange = (e) => {
@@ -545,15 +611,7 @@ const DICOMViewer = () => {
             </section>
           )}
 
-          {/* 3D Volume Viewer */}
-          {show3DViewer && currentFile && (
-            <Volume3DViewer
-              imageData={null} // Would need actual DICOM volume data
-              onClose={() => setShow3DViewer(false)}
-            />
-          )}
-
-          {/* Report Section */}
+          {/* Report Section - Now appears right after DICOM Image Viewer */}
           {report && (
             <section className="report-section">
               <h2>Medical Report</h2>
@@ -622,6 +680,14 @@ const DICOMViewer = () => {
                 </div>
               </div>
             </section>
+          )}
+
+          {/* 3D Volume Viewer */}
+          {show3DViewer && currentFile && (
+            <Volume3DViewer
+              imageData={null} // Would need actual DICOM volume data
+              onClose={() => setShow3DViewer(false)}
+            />
           )}
         </div>
       </main>

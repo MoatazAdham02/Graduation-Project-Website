@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { patientsAPI, studiesAPI, reportsAPI } from '../services/api'
+import { useAuth } from './AuthContext'
 
 const DataContext = createContext()
 
@@ -11,135 +13,151 @@ export const useData = () => {
 }
 
 export const DataProvider = ({ children }) => {
-  const [patients, setPatients] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('patients')
-        return saved ? JSON.parse(saved) : []
-      } catch (e) {
-        return []
-      }
-    }
-    return []
-  })
+  const { isAuthenticated } = useAuth()
+  const [patients, setPatients] = useState([])
+  const [studies, setStudies] = useState([])
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(false)
 
-  const [studies, setStudies] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('studies')
-        return saved ? JSON.parse(saved) : []
-      } catch (e) {
-        return []
-      }
-    }
-    return []
-  })
-
-  const [reports, setReports] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('reports')
-        return saved ? JSON.parse(saved) : []
-      } catch (e) {
-        return []
-      }
-    }
-    return []
-  })
-
+  // Load data from API when authenticated
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('patients', JSON.stringify(patients))
-      } catch (e) {
-        console.warn('Failed to save patients to localStorage:', e)
-      }
+    if (isAuthenticated) {
+      loadAllData()
+    } else {
+      // Clear data when logged out
+      setPatients([])
+      setStudies([])
+      setReports([])
     }
-  }, [patients])
+  }, [isAuthenticated])
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('studies', JSON.stringify(studies))
-      } catch (e) {
-        console.warn('Failed to save studies to localStorage:', e)
-      }
+  const loadAllData = async () => {
+    setLoading(true)
+    try {
+      const [patientsData, studiesData, reportsData] = await Promise.all([
+        patientsAPI.getAll().catch(() => []),
+        studiesAPI.getAll().catch(() => []),
+        reportsAPI.getAll().catch(() => [])
+      ])
+      
+      setPatients(patientsData || [])
+      setStudies(studiesData || [])
+      setReports(reportsData || [])
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setLoading(false)
     }
-  }, [studies])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('reports', JSON.stringify(reports))
-      } catch (e) {
-        console.warn('Failed to save reports to localStorage:', e)
-      }
-    }
-  }, [reports])
-
-  const addPatient = (patient) => {
-    const newPatient = {
-      id: Date.now().toString(),
-      ...patient,
-      createdAt: new Date().toISOString()
-    }
-    setPatients(prev => [newPatient, ...prev])
-    return newPatient
   }
 
-  const updatePatient = (id, updates) => {
-    setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
-  }
-
-  const addStudy = (study) => {
-    const newStudy = {
-      id: Date.now().toString(),
-      ...study,
-      uploadedAt: new Date().toISOString()
+  const addPatient = async (patient) => {
+    try {
+      const newPatient = await patientsAPI.create(patient)
+      setPatients(prev => [newPatient, ...prev])
+      return newPatient
+    } catch (error) {
+      console.error('Failed to create patient:', error)
+      throw error
     }
-    setStudies(prev => [newStudy, ...prev])
-    return newStudy
   }
 
-  const addReport = (report) => {
-    const newReport = {
-      id: Date.now().toString(),
-      version: 1,
-      history: [],
-      ...report,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  const updatePatient = async (id, updates) => {
+    try {
+      const updatedPatient = await patientsAPI.update(id, updates)
+      setPatients(prev => prev.map(p => p._id === id ? updatedPatient : p))
+      return updatedPatient
+    } catch (error) {
+      console.error('Failed to update patient:', error)
+      throw error
     }
-    setReports(prev => [newReport, ...prev])
-    return newReport
   }
 
-  const updateReport = (id, updates) => {
-    setReports(prev => prev.map(r => {
-      if (r.id === id) {
-        const historyEntry = {
-          version: r.version,
-          data: { ...r },
-          updatedAt: r.updatedAt
-        }
-        return {
-          ...r,
-          ...updates,
-          version: r.version + 1,
-          history: [...(r.history || []), historyEntry],
-          updatedAt: new Date().toISOString()
-        }
-      }
-      return r
-    }))
+  const deletePatient = async (id) => {
+    try {
+      await patientsAPI.delete(id)
+      setPatients(prev => prev.filter(p => p._id !== id))
+    } catch (error) {
+      console.error('Failed to delete patient:', error)
+      throw error
+    }
+  }
+
+  const addStudy = async (study) => {
+    try {
+      const newStudy = await studiesAPI.create(study)
+      setStudies(prev => [newStudy, ...prev])
+      return newStudy
+    } catch (error) {
+      console.error('Failed to create study:', error)
+      throw error
+    }
+  }
+
+  const updateStudy = async (id, updates) => {
+    try {
+      const updatedStudy = await studiesAPI.update(id, updates)
+      setStudies(prev => prev.map(s => s._id === id ? updatedStudy : s))
+      return updatedStudy
+    } catch (error) {
+      console.error('Failed to update study:', error)
+      throw error
+    }
+  }
+
+  const deleteStudy = async (id) => {
+    try {
+      await studiesAPI.delete(id)
+      setStudies(prev => prev.filter(s => s._id !== id))
+    } catch (error) {
+      console.error('Failed to delete study:', error)
+      throw error
+    }
+  }
+
+  const addReport = async (report) => {
+    try {
+      const newReport = await reportsAPI.create(report)
+      setReports(prev => [newReport, ...prev])
+      return newReport
+    } catch (error) {
+      console.error('Failed to create report:', error)
+      throw error
+    }
+  }
+
+  const updateReport = async (id, updates) => {
+    try {
+      const updatedReport = await reportsAPI.update(id, updates)
+      setReports(prev => prev.map(r => r._id === id ? updatedReport : r))
+      return updatedReport
+    } catch (error) {
+      console.error('Failed to update report:', error)
+      throw error
+    }
+  }
+
+  const deleteReport = async (id) => {
+    try {
+      await reportsAPI.delete(id)
+      setReports(prev => prev.filter(r => r._id !== id))
+    } catch (error) {
+      console.error('Failed to delete report:', error)
+      throw error
+    }
   }
 
   const getPatientStudies = (patientId) => {
-    return studies.filter(s => s.patientId === patientId)
+    return studies.filter(s => {
+      const pid = s.patientId?._id || s.patientId
+      return pid === patientId || pid?.toString() === patientId?.toString()
+    })
   }
 
   const getStudyReports = (studyId) => {
-    return reports.filter(r => r.studyId === studyId)
+    return reports.filter(r => {
+      const sid = r.studyId?._id || r.studyId
+      return sid === studyId || sid?.toString() === studyId?.toString()
+    })
   }
 
   return (
@@ -147,13 +165,19 @@ export const DataProvider = ({ children }) => {
       patients,
       studies,
       reports,
+      loading,
       addPatient,
       updatePatient,
+      deletePatient,
       addStudy,
+      updateStudy,
+      deleteStudy,
       addReport,
       updateReport,
+      deleteReport,
       getPatientStudies,
-      getStudyReports
+      getStudyReports,
+      refreshData: loadAllData
     }}>
       {children}
     </DataContext.Provider>

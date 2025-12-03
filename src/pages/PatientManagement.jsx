@@ -14,9 +14,10 @@ const PatientManagement = () => {
 
   const filteredPatients = useMemo(() => {
     return patients.filter(patient => {
+      const patientId = patient.patientId || patient._id || patient.id
       const matchesSearch = 
         patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patientId?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.email?.toLowerCase().includes(searchTerm.toLowerCase())
       
       const matchesFilter = filterStatus === 'all' || patient.status === filterStatus
@@ -29,20 +30,35 @@ const PatientManagement = () => {
     return studies.filter(s => s.patientId === patientId)
   }
 
-  const handleAddPatient = (e) => {
+  const handleAddPatient = async (e) => {
     e.preventDefault()
-    const formData = new FormData(e.target)
-    const newPatient = {
-      name: formData.get('name'),
-      id: formData.get('id'),
-      email: formData.get('email'),
-      dateOfBirth: formData.get('dob'),
-      gender: formData.get('gender'),
-      status: 'active'
+    try {
+      const formData = new FormData(e.target)
+      const dob = formData.get('dob')
+      const gender = formData.get('gender')
+      
+      // Validate required fields
+      if (!dob || !gender) {
+        alert('Please fill in all required fields (Date of Birth and Gender)')
+        return
+      }
+      
+      const newPatient = {
+        name: formData.get('name'),
+        patientId: formData.get('id'), // Backend expects 'patientId', not 'id'
+        email: formData.get('email') || undefined,
+        dateOfBirth: dob,
+        gender: gender,
+        status: 'active'
+      }
+      
+      await addPatient(newPatient)
+      setShowAddModal(false)
+      e.target.reset()
+    } catch (error) {
+      console.error('Error adding patient:', error)
+      alert(error.message || 'Failed to add patient. Please try again.')
     }
-    addPatient(newPatient)
-    setShowAddModal(false)
-    e.target.reset()
   }
 
   return (
@@ -85,14 +101,15 @@ const PatientManagement = () => {
           </div>
         ) : (
           filteredPatients.map(patient => {
-            const patientStudies = getPatientStudies(patient.id)
+            const patientId = patient.patientId || patient._id || patient.id
+            const patientStudies = getPatientStudies(patientId)
             const recentStudy = patientStudies.sort((a, b) => 
               new Date(b.uploadedAt) - new Date(a.uploadedAt)
             )[0]
 
             return (
               <div 
-                key={patient.id} 
+                key={patient._id || patient.patientId || patient.id} 
                 className="patient-card"
                 onClick={() => setSelectedPatient(patient)}
               >
@@ -102,7 +119,7 @@ const PatientManagement = () => {
                   </div>
                   <div className="patient-info">
                     <h3>{patient.name || 'Unknown'}</h3>
-                    <p className="patient-id">ID: {patient.id}</p>
+                    <p className="patient-id">ID: {patient.patientId || patient._id || patient.id}</p>
                   </div>
                   <span className={`status-badge ${patient.status || 'active'}`}>
                     {patient.status || 'active'}
@@ -157,12 +174,12 @@ const PatientManagement = () => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Date of Birth</label>
-                  <input type="date" name="dob" />
+                  <label>Date of Birth *</label>
+                  <input type="date" name="dob" required />
                 </div>
                 <div className="form-group">
-                  <label>Gender</label>
-                  <select name="gender">
+                  <label>Gender *</label>
+                  <select name="gender" required>
                     <option value="">Select</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -184,7 +201,7 @@ const PatientManagement = () => {
           <div className="patient-detail-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Patient History: {selectedPatient.name}</h2>
             <div className="patient-timeline">
-              {getPatientStudies(selectedPatient.id).map(study => (
+              {getPatientStudies(selectedPatient.patientId || selectedPatient._id || selectedPatient.id).map(study => (
                 <div key={study.id} className="timeline-item">
                   <div className="timeline-date">
                     {format(new Date(study.uploadedAt), 'MMM dd, yyyy HH:mm')}
