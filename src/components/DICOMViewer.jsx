@@ -613,7 +613,7 @@ const DICOMViewer = () => {
                 <h2>DICOM Image Viewer</h2>
                 <div className="image-actions">
                   <button onClick={() => setShow3DViewer(!show3DViewer)} className="action-btn">
-                    3D Volume
+                    3D View
                   </button>
                   <button onClick={handleReset} className="action-btn">
                     <FiRotateCw /> Reset
@@ -801,12 +801,15 @@ const DICOMViewer = () => {
             </section>
           )}
 
-          {/* 3D Volume Viewer */}
-          {show3DViewer && currentFile && (
-            <Volume3DViewer
-              imageData={null} // Would need actual DICOM volume data
-              onClose={() => setShow3DViewer(false)}
-            />
+          {/* 3D Viewing Section */}
+          {show3DViewer && filePreviews.length > 0 && (
+            <section className="viewing-3d-section">
+              <h2>3D Viewing</h2>
+              <Volume3DViewer
+                imageData={null} // Would need actual DICOM volume data
+                onClose={() => setShow3DViewer(false)}
+              />
+            </section>
           )}
         </div>
       </main>

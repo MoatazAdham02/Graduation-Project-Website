@@ -19,12 +19,11 @@ const Volume3DViewer = ({ imageData, onClose }) => {
   if (error) {
     return (
       <div className="volume-3d-viewer">
-        <div className="viewer-header">
-          <h3>3D Volume Rendering</h3>
-          {onClose && (
+        {onClose && (
+          <div className="viewer-header">
             <button className="close-button" onClick={onClose}>×</button>
-          )}
-        </div>
+          </div>
+        )}
         <div className="viewer-error">
           <p>{error}</p>
           <p className="error-note">
@@ -45,12 +44,11 @@ const Volume3DViewer = ({ imageData, onClose }) => {
 
   return (
     <div className="volume-3d-viewer">
-      <div className="viewer-header">
-        <h3>3D Volume Rendering</h3>
-        {onClose && (
+      {onClose && (
+        <div className="viewer-header">
           <button className="close-button" onClick={onClose}>×</button>
-        )}
-      </div>
+        </div>
+      )}
       {isLoading && (
         <div className="viewer-loading">
           <div className="spinner"></div>

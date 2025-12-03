@@ -81,7 +81,7 @@
   flex-direction: column;
   gap: 24px;
   width: 100%;
-  height: 100%;
+  min-height: 0;
 }
 
 section {
@@ -226,11 +226,12 @@ section h2::before {
   border-radius: 12px;
   overflow: hidden;
   min-height: 500px;
-  height: calc(100vh - 400px);
-  max-height: 800px;
+  max-height: 600px;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .loading-spinner {
@@ -260,6 +261,7 @@ section h2::before {
   width: 100%;
   height: 100%;
   position: relative;
+  overflow: hidden;
 }
 
 .image-wrapper {
@@ -602,8 +604,9 @@ section h2::before {
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 0;
 }
 
 .image-section-header {
@@ -616,6 +619,31 @@ section h2::before {
 .image-actions {
   display: flex;
   gap: 8px;
+}
+
+.viewing-3d-section {
+  width: 100%;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid var(--border, #ddd);
+  position: relative;
+  z-index: 1;
+  clear: both;
+}
+
+.viewing-3d-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  color: var(--text-primary, #333);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .viewing-3d-section {
+  border-top-color: var(--border, #444);
+}
+
+[data-theme="dark"] .viewing-3d-section h2 {
+  color: var(--text-primary, #fff);
 }
 
 .action-btn {

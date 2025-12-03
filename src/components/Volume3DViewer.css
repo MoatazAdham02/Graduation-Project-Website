@@ -2,16 +2,17 @@
   background: var(--card-bg, #fff);
   border-radius: 12px;
   padding: 20px;
-  margin: 20px 0;
+  margin: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   height: 600px;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .viewer-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 16px;
 }
