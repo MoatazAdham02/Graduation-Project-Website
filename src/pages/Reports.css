@@ -1,0 +1,350 @@
+.reports-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: var(--text-primary, #333);
+}
+
+.header-actions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary, #667eea);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #ddd);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border, #ddd);
+}
+
+.report-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: var(--text-primary, #333);
+}
+
+.report-meta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.report-actions button {
+  padding: 8px;
+  background: var(--bg-secondary, #f5f5f5);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-primary, #333);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.report-actions button:hover {
+  background: var(--primary, #667eea);
+  color: white;
+}
+
+.report-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: var(--text-primary, #333);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-primary, #333);
+}
+
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.finding-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 8px;
+  border-left: 4px solid var(--border, #ddd);
+}
+
+.finding-item.normal {
+  border-left-color: #28a745;
+}
+
+.finding-item.warning {
+  border-left-color: #ffc107;
+}
+
+.finding-item.critical {
+  border-left-color: #dc3545;
+}
+
+.finding-title {
+  font-weight: 500;
+  color: var(--text-primary, #333);
+}
+
+.finding-value {
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.recommendations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendations-list li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+  color: var(--text-primary, #333);
+}
+
+.recommendations-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary, #667eea);
+  font-weight: bold;
+}
+
+.report-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, #ddd);
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.edit-modal,
+.history-modal {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.edit-modal h2,
+.history-modal h2 {
+  margin: 0 0 24px 0;
+  color: var(--text-primary, #333);
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #333);
+}
+
+.form-group input {
+  padding: 10px 12px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-primary, #333);
+  background: var(--bg-primary, #fff);
+}
+
+.finding-edit {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.finding-edit input {
+  flex: 1;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.modal-actions button:first-child {
+  background: var(--bg-secondary, #f5f5f5);
+  color: var(--text-primary, #333);
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary, #667eea);
+  color: white;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.history-item {
+  padding: 12px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-version {
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.history-date {
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary, #666);
+}
+
+[data-theme="dark"] .reports-page {
+  color: var(--text-primary, #fff);
+}
+
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .report-header h3,
+[data-theme="dark"] .report-section h4,
+[data-theme="dark"] .finding-title,
+[data-theme="dark"] .finding-value,
+[data-theme="dark"] .info-grid {
+  color: var(--text-primary, #fff);
+}
+
+[data-theme="dark"] .report-card,
+[data-theme="dark"] .edit-modal,
+[data-theme="dark"] .history-modal {
+  background: var(--card-bg, #2a2a2a);
+  border-color: var(--border, #444);
+}
+
+[data-theme="dark"] .report-meta,
+[data-theme="dark"] .report-footer {
+  color: var(--text-secondary, #aaa);
+}
+
+[data-theme="dark"] .finding-item {
+  background: var(--bg-secondary, #3a3a3a);
+}
+
+[data-theme="dark"] .form-group input {
+  background: var(--bg-primary, #1a1a1a);
+  border-color: var(--border, #444);
+  color: var(--text-primary, #fff);
+}
+
+[data-theme="dark"] .history-item {
+  background: var(--bg-secondary, #3a3a3a);
+}
+
+[data-theme="dark"] .history-version {
+  color: var(--text-primary, #fff);
+}
+

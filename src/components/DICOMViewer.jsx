@@ -1,0 +1,632 @@
+import React, { useState, useRef, useEffect } from 'react'
+import { useData } from '../context/DataContext'
+import { useNotifications } from '../context/NotificationContext'
+import Navigation from './Navigation'
+import ProgressIndicator from './ProgressIndicator'
+import SeriesViewer from './SeriesViewer'
+import ComparisonViewer from './ComparisonViewer'
+import Volume3DViewer from './Volume3DViewer'
+import { parseDICOMFile, renderDICOMToCanvas } from '../utils/dicomParser'
+import { FiUpload, FiX, FiLayers, FiRotateCw, FiZoomIn, FiZoomOut } from 'react-icons/fi'
+import './DICOMViewer.css'
+
+const DICOMViewer = () => {
+  const { addStudy, addReport, addPatient } = useData()
+  const { notifyStudyComplete, notifyReportReady } = useNotifications()
+  
+  const [selectedFiles, setSelectedFiles] = useState([])
+  const [currentFileIndex, setCurrentFileIndex] = useState(0)
+  const [filePreviews, setFilePreviews] = useState([])
+  const [dicomData, setDicomData] = useState([])
+  const [report, setReport] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [dragActive, setDragActive] = useState(false)
+  const [showSeriesViewer, setShowSeriesViewer] = useState(false)
+  const [showComparison, setShowComparison] = useState(false)
+  const [show3DViewer, setShow3DViewer] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [rotation, setRotation] = useState(0)
+  const [windowLevel, setWindowLevel] = useState({ window: 400, level: 50 })
+  
+  const fileInputRef = useRef(null)
+  const imageContainerRef = useRef(null)
+  const canvasRef = useRef(null)
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          if (currentFileIndex > 0) {
+            setCurrentFileIndex(prev => prev - 1)
+          }
+          break
+        case 'ArrowRight':
+          if (currentFileIndex < selectedFiles.length - 1) {
+            setCurrentFileIndex(prev => prev + 1)
+          }
+          break
+        case '+':
+        case '=':
+          setZoom(prev => Math.min(prev + 0.1, 5))
+          break
+        case '-':
+          setZoom(prev => Math.max(prev - 0.1, 0.5))
+          break
+        case 'r':
+        case 'R':
+          setZoom(1)
+          setPan({ x: 0, y: 0 })
+          setRotation(0)
+          break
+        case 'f':
+        case 'F':
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen()
+          } else {
+            document.exitFullscreen()
+          }
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [currentFileIndex, selectedFiles.length])
+
+  const simulateUpload = (file) => {
+    return new Promise((resolve) => {
+      let progress = 0
+      const interval = setInterval(() => {
+        progress += 10
+        setUploadProgress(progress)
+        if (progress >= 100) {
+          clearInterval(interval)
+          resolve()
+        }
+      }, 100)
+    })
+  }
+
+  const loadDICOMFiles = async (files) => {
+    setIsLoading(true)
+    setUploadProgress(0)
+    
+    const fileArray = Array.from(files)
+    const validFiles = fileArray.filter(file => {
+      const ext = file.name.toLowerCase().split('.').pop()
+      return ext === 'dcm' || file.type === 'application/dicom' || 
+             ['dcm', 'dicom', 'ct', 'mri', 'xray'].includes(ext)
+    })
+
+    if (validFiles.length === 0) {
+      alert('Please upload valid DICOM files (.dcm) or medical imaging files')
+      setIsLoading(false)
+      return
+    }
+
+    setSelectedFiles(validFiles)
+    const previews = []
+    const parsedData = []
+
+    for (let i = 0; i < validFiles.length; i++) {
+      await simulateUpload(validFiles[i])
+      
+      try {
+        // Parse DICOM file
+        const parsed = await parseDICOMFile(validFiles[i])
+        parsedData.push(parsed)
+        
+        // Create a canvas preview thumbnail
+        const canvas = document.createElement('canvas')
+        canvas.width = parsed.width || 512
+        canvas.height = parsed.height || 512
+        
+        // Render the actual DICOM image to canvas
+        renderDICOMToCanvas(canvas, parsed, {
+          window: parsed.windowWidth || 400,
+          level: parsed.windowCenter || 50
+        })
+        
+        const previewUrl = canvas.toDataURL()
+        previews.push(previewUrl)
+        setFilePreviews([...previews])
+        setDicomData([...parsedData])
+      } catch (error) {
+        console.error('Error parsing DICOM file:', error)
+        // Fallback: create a simple placeholder
+        const canvas = document.createElement('canvas')
+        canvas.width = 512
+        canvas.height = 512
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#fff'
+        ctx.font = '14px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('Error loading DICOM file', canvas.width / 2, canvas.height / 2 - 10)
+        ctx.fillText(error.message.substring(0, 40), canvas.width / 2, canvas.height / 2 + 10)
+        const previewUrl = canvas.toDataURL()
+        previews.push(previewUrl)
+        setFilePreviews([...previews])
+        parsedData.push(null)
+        setDicomData([...parsedData])
+      }
+    }
+
+    setUploadProgress(100)
+    
+    // Generate series data
+    const series = validFiles.map((file, idx) => ({
+      id: idx,
+      file,
+      thumbnail: previews[idx],
+      imageId: `dicom://${file.name}`
+    }))
+
+    // Generate report
+    setTimeout(() => {
+      generateReport(validFiles[0])
+      setIsLoading(false)
+      setUploadProgress(0)
+      notifyStudyComplete(validFiles[0].name)
+      
+      // Save to context
+      const patient = addPatient({
+        name: 'John Doe',
+        id: 'P123456',
+        email: 'john.doe@example.com'
+      })
+      
+      const study = addStudy({
+        patientId: patient.id,
+        modality: 'CT',
+        description: 'CT Scan Study',
+        files: validFiles.map(f => f.name)
+      })
+
+      const generatedReport = addReport({
+        studyId: study.id,
+        patientId: patient.id,
+        ...report
+      })
+      
+      notifyReportReady(patient.name)
+    }, 500)
+  }
+
+  const generateReport = (file) => {
+    const simulatedReport = {
+      patientName: 'John Doe',
+      patientId: 'P123456',
+      studyDate: new Date().toLocaleDateString(),
+      modality: 'CT',
+      studyDescription: 'CT Scan - Cardiac Analysis',
+      findings: [
+        { title: 'Heart Structure', value: 'Normal', status: 'normal' },
+        { title: 'Left Ventricle Ejection Fraction', value: '65%', status: 'normal' },
+        { title: 'Coronary Artery Disease', value: 'Mild', status: 'warning' },
+        { title: 'Aortic Valve', value: 'Normal', status: 'normal' },
+        { title: 'Pulmonary Artery', value: 'Normal', status: 'normal' }
+      ],
+      recommendations: [
+        'Continue current medication regimen',
+        'Follow-up in 6 months',
+        'Maintain low-sodium diet'
+      ],
+      physician: 'Dr. Sarah Johnson, MD',
+      reportDate: new Date().toLocaleDateString()
+    }
+    setReport(simulatedReport)
+  }
+
+  const handleFileChange = (e) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      loadDICOMFiles(files)
+    }
+  }
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      loadDICOMFiles(files)
+    }
+  }
+
+  const handleZoom = (delta) => {
+    setZoom(prev => Math.max(0.5, Math.min(5, prev + delta)))
+  }
+
+  const handleReset = () => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+    setRotation(0)
+    setWindowLevel({ window: 400, level: 50 })
+  }
+
+  const handleWindowLevelChange = (type, value) => {
+    setWindowLevel(prev => ({ ...prev, [type]: value }))
+  }
+
+  // Render DICOM to canvas when file is loaded or window/level changes
+  useEffect(() => {
+    if (canvasRef.current && selectedFiles[currentFileIndex]) {
+      const canvas = canvasRef.current
+      const currentFile = selectedFiles[currentFileIndex]
+      const currentDicom = dicomData[currentFileIndex]
+      
+      if (currentDicom && currentDicom.pixelData) {
+        // Render the actual DICOM image
+        try {
+          renderDICOMToCanvas(canvas, currentDicom, windowLevel)
+        } catch (error) {
+          console.error('Error rendering DICOM:', error)
+          const ctx = canvas.getContext('2d')
+          ctx.fillStyle = '#000'
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
+          ctx.fillStyle = '#ff0000'
+          ctx.font = '14px Arial'
+          ctx.textAlign = 'center'
+          ctx.fillText('Error rendering DICOM', canvas.width / 2, canvas.height / 2)
+        }
+      } else {
+        // Show file info as placeholder
+        const ctx = canvas.getContext('2d')
+        canvas.width = 512
+        canvas.height = 512
+        ctx.fillStyle = '#000'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#fff'
+        ctx.font = '16px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('DICOM File Loaded', canvas.width / 2, canvas.height / 2 - 20)
+        ctx.fillText(currentFile.name, canvas.width / 2, canvas.height / 2)
+        ctx.font = '12px Arial'
+        ctx.fillText('File size: ' + (currentFile.size / 1024).toFixed(2) + ' KB', canvas.width / 2, canvas.height / 2 + 20)
+        if (!currentDicom) {
+          ctx.fillText('Parsing...', canvas.width / 2, canvas.height / 2 + 40)
+        }
+      }
+    }
+  }, [currentFileIndex, windowLevel, dicomData, selectedFiles])
+
+  const currentFile = selectedFiles[currentFileIndex]
+  const currentPreview = filePreviews[currentFileIndex]
+  const currentDicomData = dicomData[currentFileIndex]
+
+  return (
+    <div className="viewer-container">
+      <Navigation />
+      
+      <main className="viewer-main">
+        <div className="viewer-content">
+          {/* Upload Section */}
+          <section className="upload-section">
+            <h2>Upload DICOM Files (CT Scan Focus)</h2>
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <ProgressIndicator 
+                progress={uploadProgress} 
+                fileName={currentFile?.name || 'Uploading...'}
+              />
+            )}
+            <div
+              className={`upload-area ${dragActive ? 'drag-active' : ''} ${selectedFiles.length > 0 ? 'has-file' : ''}`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".dcm,.dicom,application/dicom"
+                multiple
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+              {selectedFiles.length === 0 ? (
+                <div className="upload-placeholder">
+                  <FiUpload size={48} />
+                  <p className="upload-text">
+                    <strong>Click to upload</strong> or drag and drop
+                  </p>
+                  <p className="upload-hint">DICOM files (.dcm) - Multiple files supported</p>
+                </div>
+              ) : (
+                <div className="file-info">
+                  <div className="file-icon">
+                    <FiLayers />
+                  </div>
+                  <div className="file-details">
+                    <p className="file-name">{selectedFiles.length} file(s) loaded</p>
+                    <p className="file-size">
+                      {selectedFiles.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024} MB total
+                    </p>
+                  </div>
+                  <button
+                    className="change-file-button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedFiles([])
+                      setFilePreviews([])
+                      setDicomData([])
+                      setReport(null)
+                      setCurrentFileIndex(0)
+                    }}
+                  >
+                    <FiX /> Change Files
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Multi-image Controls */}
+          {selectedFiles.length > 1 && (
+            <div className="multi-image-controls">
+              <button 
+                onClick={() => setShowSeriesViewer(!showSeriesViewer)}
+                className="control-button"
+              >
+                <FiLayers /> Series Viewer
+              </button>
+              <button 
+                onClick={() => setShowComparison(!showComparison)}
+                className="control-button"
+              >
+                Compare Images
+              </button>
+            </div>
+          )}
+
+          {/* Series Viewer */}
+          {showSeriesViewer && selectedFiles.length > 1 && (
+            <SeriesViewer
+              series={selectedFiles.map((file, idx) => ({
+                id: idx,
+                file,
+                thumbnail: filePreviews[idx]
+              }))}
+              currentIndex={currentFileIndex}
+              onIndexChange={setCurrentFileIndex}
+              onClose={() => setShowSeriesViewer(false)}
+            />
+          )}
+
+          {/* Comparison Viewer */}
+          {showComparison && selectedFiles.length >= 2 && (
+            <ComparisonViewer
+              images={[filePreviews[0], filePreviews[1] || filePreviews[0]]}
+              onClose={() => setShowComparison(false)}
+            />
+          )}
+
+          {/* DICOM Image Display */}
+          {currentFile && (
+            <section className="image-section">
+              <div className="image-section-header">
+                <h2>DICOM Image Viewer</h2>
+                <div className="image-actions">
+                  <button onClick={() => setShow3DViewer(!show3DViewer)} className="action-btn">
+                    3D Volume
+                  </button>
+                  <button onClick={handleReset} className="action-btn">
+                    <FiRotateCw /> Reset
+                  </button>
+                </div>
+              </div>
+
+              <div className="image-controls-panel">
+                <div className="control-group">
+                  <label>Zoom: {Math.round(zoom * 100)}%</label>
+                  <div className="zoom-controls">
+                    <button onClick={() => handleZoom(-0.1)}><FiZoomOut /></button>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="5"
+                      step="0.1"
+                      value={zoom}
+                      onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    />
+                    <button onClick={() => handleZoom(0.1)}><FiZoomIn /></button>
+                  </div>
+                </div>
+
+                <div className="control-group">
+                  <label>Window: {windowLevel.window}</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2000"
+                    value={windowLevel.window}
+                    onChange={(e) => handleWindowLevelChange('window', parseInt(e.target.value))}
+                  />
+                </div>
+
+                <div className="control-group">
+                  <label>Level: {windowLevel.level}</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    value={windowLevel.level}
+                    onChange={(e) => handleWindowLevelChange('level', parseInt(e.target.value))}
+                  />
+                </div>
+              </div>
+
+              <div className="image-container" ref={imageContainerRef}>
+                {isLoading ? (
+                  <div className="loading-spinner">
+                    <div className="spinner"></div>
+                    <p>Loading DICOM file...</p>
+                  </div>
+                ) : (
+                  <div className="dicom-display">
+                    {currentFile ? (
+                      <div 
+                        className="image-wrapper"
+                        style={{
+                          transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px) rotate(${rotation}deg)`,
+                          transformOrigin: 'center center'
+                        }}
+                      >
+                        <canvas
+                          ref={canvasRef}
+                          className="dicom-canvas"
+                          width={currentDicomData?.width || 512}
+                          height={currentDicomData?.height || 512}
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '600px',
+                            display: 'block',
+                            cursor: 'move'
+                          }}
+                        />
+                        {currentDicomData && (
+                          <div className="dicom-info-overlay">
+                            <p>Modality: {currentDicomData.modality || 'Unknown'}</p>
+                            <p>Size: {currentDicomData.width} × {currentDicomData.height}</p>
+                            {currentDicomData.pixelSpacing && (
+                              <p>Pixel Spacing: {currentDicomData.pixelSpacing}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="no-preview">
+                        <p>No file selected</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {selectedFiles.length > 1 && (
+                <div className="file-navigation">
+                  <button 
+                    onClick={() => setCurrentFileIndex(prev => Math.max(0, prev - 1))}
+                    disabled={currentFileIndex === 0}
+                  >
+                    ← Previous
+                  </button>
+                  <span>
+                    Image {currentFileIndex + 1} of {selectedFiles.length}
+                  </span>
+                  <button 
+                    onClick={() => setCurrentFileIndex(prev => Math.min(selectedFiles.length - 1, prev + 1))}
+                    disabled={currentFileIndex === selectedFiles.length - 1}
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* 3D Volume Viewer */}
+          {show3DViewer && currentFile && (
+            <Volume3DViewer
+              imageData={null} // Would need actual DICOM volume data
+              onClose={() => setShow3DViewer(false)}
+            />
+          )}
+
+          {/* Report Section */}
+          {report && (
+            <section className="report-section">
+              <h2>Medical Report</h2>
+              <div className="report-container">
+                <div className="report-header">
+                  <div className="report-header-info">
+                    <h3>CT Scan Analysis Report</h3>
+                    <p className="report-date">Date: {report.reportDate}</p>
+                  </div>
+                  <div className="report-status-badge">
+                    <span className="status-dot"></span>
+                    Completed
+                  </div>
+                </div>
+
+                <div className="report-patient-info">
+                  <div className="info-item">
+                    <span className="info-label">Patient Name:</span>
+                    <span className="info-value">{report.patientName}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Patient ID:</span>
+                    <span className="info-value">{report.patientId}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Study Date:</span>
+                    <span className="info-value">{report.studyDate}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Modality:</span>
+                    <span className="info-value">{report.modality}</span>
+                  </div>
+                </div>
+
+                <div className="report-findings">
+                  <h4>Findings</h4>
+                  <div className="findings-list">
+                    {report.findings.map((finding, index) => (
+                      <div key={index} className={`finding-item ${finding.status}`}>
+                        <div className="finding-header">
+                          <span className="finding-title">{finding.title}</span>
+                          <span className={`finding-status ${finding.status}`}>
+                            {finding.status === 'normal' ? '✓' : '⚠'}
+                          </span>
+                        </div>
+                        <div className="finding-value">{finding.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="report-recommendations">
+                  <h4>Recommendations</h4>
+                  <ul className="recommendations-list">
+                    {report.recommendations.map((rec, index) => (
+                      <li key={index}>{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="report-footer">
+                  <div className="physician-info">
+                    <p className="physician-name">{report.physician}</p>
+                    <p className="physician-title">Radiologist</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default DICOMViewer

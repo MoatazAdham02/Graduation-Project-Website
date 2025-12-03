@@ -1,0 +1,11 @@
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
+.page-container > *:not(:first-child) {
+  flex: 1;
+  padding: 24px;
+}
