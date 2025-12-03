@@ -4,12 +4,14 @@ const Report = require('../models/Report');
 const { protect } = require('../middleware/auth');
 
 // @route   GET /api/reports
-// @desc    Get all reports
+// @desc    Get all reports for the logged-in user
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
     const { patientId, studyId } = req.query;
-    const query = {};
+    const query = {
+      createdBy: req.user._id // Only get reports created by the logged-in user
+    };
 
     if (patientId) {
       query.patientId = patientId;
@@ -37,7 +39,10 @@ router.get('/', protect, async (req, res) => {
 // @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
-    const report = await Report.findById(req.params.id)
+    const report = await Report.findOne({
+      _id: req.params.id,
+      createdBy: req.user._id // Only allow access to own reports
+    })
       .populate('patientId')
       .populate('studyId')
       .populate('createdBy', 'firstName lastName email');
@@ -92,6 +97,18 @@ router.post('/', protect, async (req, res) => {
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
   try {
+    // First check if report exists and belongs to the user
+    const existingReport = await Report.findById(req.params.id);
+    
+    if (!existingReport) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+
+    // Check if the report belongs to the logged-in user
+    if (existingReport.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to update this report' });
+    }
+
     const report = await Report.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -100,10 +117,6 @@ router.put('/:id', protect, async (req, res) => {
       .populate('patientId')
       .populate('studyId')
       .populate('createdBy', 'firstName lastName email');
-
-    if (!report) {
-      return res.status(404).json({ error: 'Report not found' });
-    }
 
     res.json(report);
   } catch (error) {
@@ -124,11 +137,19 @@ router.put('/:id', protect, async (req, res) => {
 // @access  Private
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const report = await Report.findByIdAndDelete(req.params.id);
+    // First check if report exists and belongs to the user
+    const report = await Report.findById(req.params.id);
 
     if (!report) {
       return res.status(404).json({ error: 'Report not found' });
     }
+
+    // Check if the report belongs to the logged-in user
+    if (report.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to delete this report' });
+    }
+
+    await Report.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Report deleted successfully' });
   } catch (error) {

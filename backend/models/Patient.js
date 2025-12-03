@@ -42,6 +42,11 @@ const patientSchema = new mongoose.Schema({
     enum: ['active', 'inactive'],
     default: 'active'
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -61,6 +66,7 @@ patientSchema.pre('save', function(next) {
 // Index for faster searches
 patientSchema.index({ patientId: 1 });
 patientSchema.index({ name: 'text', email: 'text' });
+patientSchema.index({ createdBy: 1 });
 
 module.exports = mongoose.model('Patient', patientSchema);
 

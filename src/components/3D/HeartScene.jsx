@@ -173,7 +173,7 @@ export default function HeartScene({
       }}
     >
       <Canvas 
-        camera={{ position: [0, 0, 3], fov: 50 }}
+        camera={{ position: [0, 0, 2], fov: 50 }}
         gl={{ 
           antialias: true, 
           alpha: true,
@@ -228,7 +228,7 @@ export default function HeartScene({
           enableZoom={enableZoom}
           enablePan={enablePan}
           autoRotate={autoRotate}
-          autoRotateSpeed={2.5}
+          autoRotateSpeed={4.0}
           minPolarAngle={Math.PI / 3}
           maxPolarAngle={2 * Math.PI / 3}
           enableDamping

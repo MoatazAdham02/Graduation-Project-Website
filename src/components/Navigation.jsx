@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { FiHome, FiUsers, FiFileText, FiBarChart2, FiMoon, FiSun, FiLogOut, FiMaximize2 } from 'react-icons/fi'
+import { FiHome, FiUsers, FiFileText, FiBarChart2, FiMoon, FiSun, FiLogOut, FiMaximize2, FiInfo } from 'react-icons/fi'
 import './Navigation.css'
 
 const Navigation = () => {
@@ -34,6 +34,7 @@ const Navigation = () => {
     { path: '/patients', icon: FiUsers, label: 'Patients' },
     { path: '/reports', icon: FiFileText, label: 'Reports' },
     { path: '/analytics', icon: FiBarChart2, label: 'Analytics' },
+    { path: '/about', icon: FiInfo, label: 'About' },
   ]
 
   return (

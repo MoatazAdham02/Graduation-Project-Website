@@ -4,12 +4,14 @@ const Study = require('../models/Study');
 const { protect } = require('../middleware/auth');
 
 // @route   GET /api/studies
-// @desc    Get all studies
+// @desc    Get all studies for the logged-in user
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
     const { patientId, modality } = req.query;
-    const query = {};
+    const query = {
+      uploadedBy: req.user._id // Only get studies uploaded by the logged-in user
+    };
 
     if (patientId) {
       query.patientId = patientId;
@@ -36,7 +38,10 @@ router.get('/', protect, async (req, res) => {
 // @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
-    const study = await Study.findById(req.params.id)
+    const study = await Study.findOne({
+      _id: req.params.id,
+      uploadedBy: req.user._id // Only allow access to own studies
+    })
       .populate('patientId')
       .populate('uploadedBy', 'firstName lastName email');
 
@@ -89,6 +94,18 @@ router.post('/', protect, async (req, res) => {
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
   try {
+    // First check if study exists and belongs to the user
+    const existingStudy = await Study.findById(req.params.id);
+    
+    if (!existingStudy) {
+      return res.status(404).json({ error: 'Study not found' });
+    }
+
+    // Check if the study belongs to the logged-in user
+    if (existingStudy.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to update this study' });
+    }
+
     const study = await Study.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -96,10 +113,6 @@ router.put('/:id', protect, async (req, res) => {
     )
       .populate('patientId')
       .populate('uploadedBy', 'firstName lastName email');
-
-    if (!study) {
-      return res.status(404).json({ error: 'Study not found' });
-    }
 
     res.json(study);
   } catch (error) {
@@ -120,11 +133,19 @@ router.put('/:id', protect, async (req, res) => {
 // @access  Private
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const study = await Study.findByIdAndDelete(req.params.id);
+    // First check if study exists and belongs to the user
+    const study = await Study.findById(req.params.id);
 
     if (!study) {
       return res.status(404).json({ error: 'Study not found' });
     }
+
+    // Check if the study belongs to the logged-in user
+    if (study.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to delete this study' });
+    }
+
+    await Study.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Study deleted successfully' });
   } catch (error) {

@@ -6,11 +6,11 @@ import HeartIntro from './components/HeartIntro'
 import AuthLanding from './components/AuthLanding'
 import Login from './components/Login'
 import Register from './components/Register'
-import ForgotPassword from './components/ForgotPassword'
 import DICOMViewer from './components/DICOMViewer'
 import PatientManagement from './pages/PatientManagement'
 import Reports from './pages/Reports'
 import Analytics from './pages/Analytics'
+import About from './pages/About'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
@@ -70,7 +70,6 @@ function App() {
                 <Route path="/auth-landing" element={<AuthLanding />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route
                   path="/viewer"
                   element={
@@ -100,6 +99,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Analytics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/about"
+                  element={
+                    <ProtectedRoute>
+                      <About />
                     </ProtectedRoute>
                   }
                 />

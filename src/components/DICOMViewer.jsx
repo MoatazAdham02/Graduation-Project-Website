@@ -34,6 +34,80 @@ const DICOMViewer = () => {
   const imageContainerRef = useRef(null)
   const canvasRef = useRef(null)
 
+  // Load persisted DICOM data on mount
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem('dicomViewerData')
+      if (savedData) {
+        const parsed = JSON.parse(savedData)
+        if (parsed.filePreviews && parsed.filePreviews.length > 0) {
+          setFilePreviews(parsed.filePreviews)
+          // Restore metadata only (pixelData is not saved to avoid lag)
+          const restoredDicomData = (parsed.dicomData || []).map(d => {
+            if (!d) return null
+            // Return metadata only - pixelData will need to be re-parsed if needed
+            return {
+              ...d,
+              pixelData: null // Will be null since we don't save it
+            }
+          })
+          setDicomData(restoredDicomData)
+          setReport(parsed.report)
+          setCurrentFileIndex(parsed.currentFileIndex || 0)
+          setWindowLevel(parsed.windowLevel || { window: 400, level: 50 })
+          // Set a placeholder for selectedFiles so the UI knows files are loaded
+          setSelectedFiles(parsed.filePreviews.map((_, idx) => ({ name: `File ${idx + 1}`, size: 0 })))
+        }
+      }
+    } catch (error) {
+      console.error('Error loading persisted DICOM data:', error)
+    }
+  }, [])
+
+  // Save DICOM data to localStorage whenever it changes (without pixelData to avoid lag)
+  useEffect(() => {
+    if (filePreviews.length > 0) {
+      try {
+        const dataToSave = {
+          filePreviews,
+          // Only save metadata, not pixelData (too large and causes lag)
+          dicomData: dicomData.map(d => {
+            if (!d) return null
+            return {
+              width: d.width,
+              height: d.height,
+              // Don't save pixelData - it's too large and causes performance issues
+              windowWidth: d.windowWidth,
+              windowCenter: d.windowCenter,
+              modality: d.modality,
+              patient: d.patient,
+              study: d.study,
+              pixelSpacing: d.pixelSpacing
+            }
+          }),
+          report,
+          currentFileIndex,
+          windowLevel
+        }
+        localStorage.setItem('dicomViewerData', JSON.stringify(dataToSave))
+      } catch (error) {
+        console.error('Error saving DICOM data:', error)
+        // If data is too large, try saving without dicomData
+        try {
+          const minimalData = {
+            filePreviews,
+            report,
+            currentFileIndex,
+            windowLevel
+          }
+          localStorage.setItem('dicomViewerData', JSON.stringify(minimalData))
+        } catch (e) {
+          console.error('Error saving minimal DICOM data:', e)
+        }
+      }
+    }
+  }, [filePreviews, report, currentFileIndex, windowLevel])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -136,6 +210,9 @@ const DICOMViewer = () => {
         previews.push(previewUrl)
         setFilePreviews([...previews])
         setDicomData([...parsedData])
+        
+        // Note: Saving to localStorage is handled by the useEffect hook above
+        // We don't save here to avoid blocking the UI during upload
       } catch (error) {
         console.error('Error parsing DICOM file:', error)
         // Fallback: create a simple placeholder
@@ -155,6 +232,8 @@ const DICOMViewer = () => {
         setFilePreviews([...previews])
         parsedData.push(null)
         setDicomData([...parsedData])
+        
+        // Note: Saving to localStorage is handled by the useEffect hook above
       }
     }
 
@@ -287,6 +366,19 @@ const DICOMViewer = () => {
       reportDate: new Date().toLocaleDateString()
     }
     setReport(simulatedReport)
+    
+    // Save report to localStorage
+    try {
+      const savedData = localStorage.getItem('dicomViewerData')
+      if (savedData) {
+        const parsed = JSON.parse(savedData)
+        parsed.report = simulatedReport
+        localStorage.setItem('dicomViewerData', JSON.stringify(parsed))
+      }
+    } catch (error) {
+      console.error('Error saving report:', error)
+    }
+    
     return simulatedReport // Return for database storage
   }
 
@@ -335,27 +427,52 @@ const DICOMViewer = () => {
 
   // Render DICOM to canvas when file is loaded or window/level changes
   useEffect(() => {
-    if (canvasRef.current && selectedFiles[currentFileIndex]) {
+    if (canvasRef.current && filePreviews.length > 0) {
       const canvas = canvasRef.current
-      const currentFile = selectedFiles[currentFileIndex]
+      const currentPreview = filePreviews[currentFileIndex]
       const currentDicom = dicomData[currentFileIndex]
       
       if (currentDicom && currentDicom.pixelData) {
-        // Render the actual DICOM image
+        // Render the actual DICOM image if pixelData is available
         try {
           renderDICOMToCanvas(canvas, currentDicom, windowLevel)
         } catch (error) {
           console.error('Error rendering DICOM:', error)
+          // Fallback to preview image
+          if (currentPreview) {
+            const img = new Image()
+            img.onload = () => {
+              const ctx = canvas.getContext('2d')
+              canvas.width = img.width
+              canvas.height = img.height
+              ctx.drawImage(img, 0, 0)
+            }
+            img.src = currentPreview
+          }
+        }
+      } else if (currentPreview) {
+        // Use the saved preview image (faster, no lag)
+        const img = new Image()
+        img.onload = () => {
           const ctx = canvas.getContext('2d')
+          canvas.width = img.width
+          canvas.height = img.height
+          ctx.drawImage(img, 0, 0)
+        }
+        img.onerror = () => {
+          const ctx = canvas.getContext('2d')
+          canvas.width = 512
+          canvas.height = 512
           ctx.fillStyle = '#000'
           ctx.fillRect(0, 0, canvas.width, canvas.height)
-          ctx.fillStyle = '#ff0000'
+          ctx.fillStyle = '#fff'
           ctx.font = '14px Arial'
           ctx.textAlign = 'center'
-          ctx.fillText('Error rendering DICOM', canvas.width / 2, canvas.height / 2)
+          ctx.fillText('Error loading preview', canvas.width / 2, canvas.height / 2)
         }
+        img.src = currentPreview
       } else {
-        // Show file info as placeholder
+        // Show placeholder
         const ctx = canvas.getContext('2d')
         canvas.width = 512
         canvas.height = 512
@@ -365,15 +482,11 @@ const DICOMViewer = () => {
         ctx.font = '16px Arial'
         ctx.textAlign = 'center'
         ctx.fillText('DICOM File Loaded', canvas.width / 2, canvas.height / 2 - 20)
-        ctx.fillText(currentFile.name, canvas.width / 2, canvas.height / 2)
         ctx.font = '12px Arial'
-        ctx.fillText('File size: ' + (currentFile.size / 1024).toFixed(2) + ' KB', canvas.width / 2, canvas.height / 2 + 20)
-        if (!currentDicom) {
-          ctx.fillText('Parsing...', canvas.width / 2, canvas.height / 2 + 40)
-        }
+        ctx.fillText('Parsing...', canvas.width / 2, canvas.height / 2 + 20)
       }
     }
-  }, [currentFileIndex, windowLevel, dicomData, selectedFiles])
+  }, [currentFileIndex, windowLevel, dicomData, filePreviews])
 
   const currentFile = selectedFiles[currentFileIndex]
   const currentPreview = filePreviews[currentFileIndex]
@@ -395,7 +508,7 @@ const DICOMViewer = () => {
               />
             )}
             <div
-              className={`upload-area ${dragActive ? 'drag-active' : ''} ${selectedFiles.length > 0 ? 'has-file' : ''}`}
+              className={`upload-area ${dragActive ? 'drag-active' : ''} ${filePreviews.length > 0 ? 'has-file' : ''}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -410,7 +523,7 @@ const DICOMViewer = () => {
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
-              {selectedFiles.length === 0 ? (
+              {filePreviews.length === 0 ? (
                 <div className="upload-placeholder">
                   <FiUpload size={48} />
                   <p className="upload-text">
@@ -424,9 +537,9 @@ const DICOMViewer = () => {
                     <FiLayers />
                   </div>
                   <div className="file-details">
-                    <p className="file-name">{selectedFiles.length} file(s) loaded</p>
+                    <p className="file-name">{filePreviews.length} file(s) loaded</p>
                     <p className="file-size">
-                      {selectedFiles.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024} MB total
+                      {filePreviews.length} DICOM file(s) loaded
                     </p>
                   </div>
                   <button
@@ -436,6 +549,12 @@ const DICOMViewer = () => {
                       setSelectedFiles([])
                       setFilePreviews([])
                       setDicomData([])
+                      setReport(null)
+                      setCurrentFileIndex(0)
+                      // Clear persisted data
+                      localStorage.removeItem('dicomViewerData')
+                      // Clear persisted data
+                      localStorage.removeItem('dicomViewerData')
                       setReport(null)
                       setCurrentFileIndex(0)
                     }}
@@ -448,7 +567,7 @@ const DICOMViewer = () => {
           </section>
 
           {/* Multi-image Controls */}
-          {selectedFiles.length > 1 && (
+          {filePreviews.length > 1 && (
             <div className="multi-image-controls">
               <button 
                 onClick={() => setShowSeriesViewer(!showSeriesViewer)}
@@ -589,7 +708,7 @@ const DICOMViewer = () => {
                 )}
               </div>
 
-              {selectedFiles.length > 1 && (
+              {filePreviews.length > 1 && (
                 <div className="file-navigation">
                   <button 
                     onClick={() => setCurrentFileIndex(prev => Math.max(0, prev - 1))}
