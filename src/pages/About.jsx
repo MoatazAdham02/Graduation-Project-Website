@@ -9,7 +9,7 @@ const About = () => {
       <Navigation />
       <div className="about-page">
         <div className="about-header">
-          <h1>About Medical DICOM</h1>
+          <h1>About Plaqio</h1>
           <p className="about-subtitle">Advanced Medical Imaging Management System</p>
         </div>
 
@@ -20,7 +20,7 @@ const About = () => {
             </div>
             <h2>Our Purpose</h2>
             <p>
-              Medical DICOM is a comprehensive web-based platform designed to revolutionize how healthcare 
+              Plaqio is a comprehensive web-based platform designed to revolutionize how healthcare 
               professionals manage, analyze, and report on medical imaging studies. Our mission is to provide 
               doctors and radiologists with powerful tools to efficiently process DICOM files, generate 
               detailed medical reports, and maintain comprehensive patient records.
@@ -84,7 +84,7 @@ const About = () => {
             </div>
             <h2>Who We Serve</h2>
             <p>
-              Medical DICOM is designed for healthcare professionals including:
+              Plaqio is designed for healthcare professionals including:
             </p>
             <ul className="served-list">
               <li>Radiologists analyzing medical imaging studies</li>

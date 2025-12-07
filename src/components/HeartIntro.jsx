@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import HeartScene from './3D/HeartScene'
 import './HeartIntro.css'
 
 const HeartIntro = () => {
@@ -51,13 +50,22 @@ const HeartIntro = () => {
       </div>
 
       <div className="heart-intro-content">
+        <div className="heart-intro-text">
+          <h1 className="intro-title">Plaqio</h1>
+          <p className="intro-tagline">Detect. Analyze. Monitor</p>
+          <div className="intro-hint">
+            <span className="hint-icon">👆</span>
+            <span>Click to begin</span>
+          </div>
+        </div>
+
         <div 
           ref={heartRef}
-          className={`heart-intro-3d ${isAnimating ? 'heart-animate' : ''}`}
+          className={`heart-intro-button ${isAnimating ? 'heart-animate' : ''}`}
           onClick={handleHeartClick}
           role="button"
           tabIndex={0}
-          aria-label="Click the heart to enter the Medical DICOM Viewer"
+          aria-label="Click to enter Plaqio"
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault()
@@ -65,22 +73,7 @@ const HeartIntro = () => {
             }
           }}
         >
-          <HeartScene
-            className="heart-intro-scene"
-            autoRotate={true}
-            enableZoom={false}
-            scale={2.5}
-            position={[0, 0, 0]}
-          />
-        </div>
-
-        <div className="heart-intro-text">
-          <h1 className="intro-title">Medical DICOM Viewer</h1>
-          <p className="intro-subtitle">Heart Analysis System</p>
-          <div className="intro-hint">
-            <span className="hint-icon">👆</span>
-            <span>Click the heart to begin</span>
-          </div>
+          <button className="enter-button">Enter</button>
         </div>
 
         {/* Animated particles effect */}

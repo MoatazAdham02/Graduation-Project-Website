@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import HeartScene from './3D/HeartScene'
 import './Login.css'
 
 const Login = () => {
@@ -128,17 +127,8 @@ const Login = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="heart-icon heart-3d-wrapper">
-            <HeartScene 
-              className="heart-3d-form"
-              autoRotate={true}
-              enableZoom={false}
-              scale={1.2}
-              position={[0, 0, 0]}
-            />
-          </div>
-          <h1>Medical DICOM Viewer</h1>
-          <p>Heart Analysis System</p>
+          <h1>Plaqio</h1>
+          <p className="tagline">Detect. Analyze. Monitor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">

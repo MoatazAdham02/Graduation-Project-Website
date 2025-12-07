@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import HeartScene from './3D/HeartScene'
 import './Register.css'
 
 const Register = () => {
@@ -123,17 +122,8 @@ const Register = () => {
     <div className="register-container">
       <div className="register-card">
         <div className="register-header">
-          <div className="heart-icon heart-3d-wrapper">
-            <HeartScene 
-              className="heart-3d-form"
-              autoRotate={true}
-              enableZoom={false}
-              scale={1.2}
-              position={[0, 0, 0]}
-            />
-          </div>
           <h1>Create Account</h1>
-          <p>Sign up to access the Medical DICOM Viewer</p>
+          <p>Sign up to access Plaqio</p>
         </div>
 
         <form onSubmit={handleSubmit} className="register-form">

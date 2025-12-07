@@ -19,11 +19,25 @@
 
 .logo {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.logo-name {
   color: var(--primary, #667eea);
   font-weight: 600;
   font-size: 18px;
+  line-height: 1.2;
+}
+
+.logo-tagline {
+  color: var(--text-secondary, #666);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .logo svg {
@@ -109,12 +123,16 @@
   color: white;
 }
 
+[data-theme="dark"] .logo-tagline {
+  color: var(--text-secondary, #aaa);
+}
+
 @media (max-width: 768px) {
   .nav-links span {
     display: none;
   }
   
-  .logo span {
+  .logo-tagline {
     display: none;
   }
 }

@@ -1,6 +1,5 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import HeartScene from './3D/HeartScene'
 import './AuthLanding.css'
 
 const AuthLanding = () => {
@@ -10,17 +9,8 @@ const AuthLanding = () => {
     <div className="auth-landing">
       <div className="landing-content">
         <div className="landing-header">
-          <div className="heart-icon heart-3d-wrapper">
-            <HeartScene 
-              className="heart-3d-auth"
-              autoRotate={true}
-              enableZoom={false}
-              scale={1.5}
-              position={[0, 0, 0]}
-            />
-          </div>
-          <h1>Medical DICOM Viewer</h1>
-          <p>Heart Analysis System</p>
+          <h1>Plaqio</h1>
+          <p className="tagline">Detect. Analyze. Monitor</p>
         </div>
 
         <div className="auth-buttons">
