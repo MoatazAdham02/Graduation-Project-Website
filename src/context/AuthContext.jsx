@@ -59,6 +59,9 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user)
       setIsAuthenticated(true)
       
+      // Clear DICOM viewer data so new user starts with a fresh viewer
+      localStorage.removeItem('dicomViewerData')
+      
       // Store remembered user if needed
       if (userData.email) {
         localStorage.setItem('rememberedUser', JSON.stringify({ email: userData.email }))
@@ -76,6 +79,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('authToken', data.token)
       setUser(data.user)
       setIsAuthenticated(true)
+      
+      // Clear DICOM viewer data so user starts with a fresh viewer on login
+      localStorage.removeItem('dicomViewerData')
       
       // Store remembered user
       if (rememberMe && email) {
@@ -105,6 +111,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('rememberedUser')
+    // Clear DICOM viewer data on logout
+    localStorage.removeItem('dicomViewerData')
     setUser(null)
     setIsAuthenticated(false)
   }

@@ -60,6 +60,7 @@ const DICOMViewer = () => {
   const canvasRef = useRef(null)
   const annotationCanvasRef = useRef(null)
   const playbackIntervalRef = useRef(null)
+  const thumbnailStripRef = useRef(null)
 
   // Load persisted DICOM data on mount
   useEffect(() => {
@@ -711,6 +712,32 @@ const DICOMViewer = () => {
     }
   }, [])
 
+  // Auto-scroll thumbnail strip to current slice
+  useEffect(() => {
+    if (thumbnailStripRef.current && filePreviews.length > 0) {
+      const strip = thumbnailStripRef.current
+      const activeThumbnail = strip.querySelector(`.thumbnail-item:nth-child(${currentFileIndex + 1})`)
+      if (activeThumbnail) {
+        const stripRect = strip.getBoundingClientRect()
+        const thumbRect = activeThumbnail.getBoundingClientRect()
+        const scrollLeft = strip.scrollLeft
+        const thumbLeft = activeThumbnail.offsetLeft
+        const thumbWidth = activeThumbnail.offsetWidth
+        
+        // Calculate if thumbnail is visible
+        const isVisible = thumbLeft >= scrollLeft && thumbLeft + thumbWidth <= scrollLeft + stripRect.width
+        
+        if (!isVisible) {
+          // Scroll to center the active thumbnail
+          strip.scrollTo({
+            left: thumbLeft - (stripRect.width / 2) + (thumbWidth / 2),
+            behavior: 'smooth'
+          })
+        }
+      }
+    }
+  }, [currentFileIndex, filePreviews.length])
+
   // Render DICOM to canvas when file is loaded or window/level changes
   useEffect(() => {
     if (canvasRef.current && filePreviews.length > 0) {
@@ -1308,39 +1335,76 @@ const DICOMViewer = () => {
                   )}
                 </div>
 
-                {/* Thumbnail Strip */}
-                {showThumbnails && filePreviews.length > 1 && (
-                  <div className="thumbnail-strip">
-                    <button 
-                      className="thumbnail-nav-btn"
-                      onClick={() => {
-                        const strip = document.querySelector('.thumbnail-strip-content')
-                        if (strip) strip.scrollLeft -= 150
-                      }}
-                    >
-                      <FiChevronLeft />
-                    </button>
-                    <div className="thumbnail-strip-content">
-                      {filePreviews.map((preview, idx) => (
-                        <div
-                          key={idx}
-                          className={`thumbnail-item ${idx === currentFileIndex ? 'active' : ''}`}
-                          onClick={() => setCurrentFileIndex(idx)}
-                        >
-                          <img src={preview} alt={`Thumbnail ${idx + 1}`} />
-                          <span className="thumbnail-number">{idx + 1}</span>
-                        </div>
-                      ))}
+                {/* Slice Scroller - Loops through all DICOM slices */}
+                {filePreviews.length > 0 && (
+                  <div className="slice-scroller-container">
+                    <div className="slice-scroller-header">
+                      <h4>Slice Navigator</h4>
+                      <span className="slice-counter">
+                        Slice {currentFileIndex + 1} of {filePreviews.length}
+                      </span>
                     </div>
-                    <button 
-                      className="thumbnail-nav-btn"
-                      onClick={() => {
-                        const strip = document.querySelector('.thumbnail-strip-content')
-                        if (strip) strip.scrollLeft += 150
-                      }}
-                    >
-                      <FiChevronRight />
-                    </button>
+                    <div className="thumbnail-strip">
+                      <button 
+                        className="thumbnail-nav-btn"
+                        onClick={() => {
+                          if (thumbnailStripRef.current) {
+                            thumbnailStripRef.current.scrollBy({
+                              left: -200,
+                              behavior: 'smooth'
+                            })
+                          }
+                        }}
+                        aria-label="Scroll left"
+                      >
+                        <FiChevronLeft />
+                      </button>
+                      <div 
+                        ref={thumbnailStripRef}
+                        className="thumbnail-strip-content"
+                        onWheel={(e) => {
+                          // Allow horizontal scrolling with mouse wheel
+                          if (e.shiftKey || e.deltaY !== 0) {
+                            e.preventDefault()
+                            if (thumbnailStripRef.current) {
+                              thumbnailStripRef.current.scrollLeft += e.deltaY
+                            }
+                          }
+                        }}
+                      >
+                        {filePreviews.map((preview, idx) => (
+                          <div
+                            key={idx}
+                            className={`thumbnail-item ${idx === currentFileIndex ? 'active' : ''}`}
+                            onClick={() => setCurrentFileIndex(idx)}
+                            title={`Slice ${idx + 1}`}
+                          >
+                            <img src={preview} alt={`Slice ${idx + 1}`} />
+                            <span className="thumbnail-number">{idx + 1}</span>
+                            {idx === currentFileIndex && (
+                              <div className="thumbnail-active-indicator" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <button 
+                        className="thumbnail-nav-btn"
+                        onClick={() => {
+                          if (thumbnailStripRef.current) {
+                            thumbnailStripRef.current.scrollBy({
+                              left: 200,
+                              behavior: 'smooth'
+                            })
+                          }
+                        }}
+                        aria-label="Scroll right"
+                      >
+                        <FiChevronRight />
+                      </button>
+                    </div>
+                    <div className="slice-scroller-hint">
+                      <span>💡 Scroll horizontally or use arrow buttons to navigate through all slices</span>
+                    </div>
                   </div>
                 )}
               </div>
