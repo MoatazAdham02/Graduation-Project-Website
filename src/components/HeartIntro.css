@@ -276,17 +276,21 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .heart-intro-3d {
-    width: 300px;
-    height: 300px;
+  .heart-intro-button {
+    width: auto;
+  }
+
+  .enter-button {
+    padding: 14px 40px;
+    font-size: 16px;
   }
 
   .intro-title {
     font-size: 36px;
   }
 
-  .intro-subtitle {
-    font-size: 20px;
+  .intro-tagline {
+    font-size: 16px;
   }
 
   .intro-hint {
@@ -296,17 +300,21 @@
 }
 
 @media (max-width: 480px) {
-  .heart-intro-3d {
-    width: 250px;
-    height: 250px;
+  .heart-intro-button {
+    width: auto;
+  }
+
+  .enter-button {
+    padding: 12px 32px;
+    font-size: 14px;
   }
 
   .intro-title {
     font-size: 28px;
   }
 
-  .intro-subtitle {
-    font-size: 18px;
+  .intro-tagline {
+    font-size: 14px;
   }
 
   .heart-intro-content {
@@ -320,11 +328,6 @@
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
 }
 
-[data-theme="dark"] .heart-intro-scene {
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.2) 0%, transparent 70%);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
 /* Accessibility */
 .heart-intro-container:focus {
   outline: 3px solid rgba(255, 255, 255, 0.5);
@@ -333,8 +336,8 @@
 
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .heart-intro-3d,
-  .heart-intro-3d.heart-animate,
+  .heart-intro-button,
+  .heart-intro-button.heart-animate,
   .particle,
   .gradient-orb,
   .intro-hint,
@@ -342,8 +345,12 @@
     animation: none;
   }
   
-  .heart-intro-3d:hover {
+  .heart-intro-button:hover {
     transform: none;
+  }
+  
+  .enter-button {
+    transition: none;
   }
 }
 
