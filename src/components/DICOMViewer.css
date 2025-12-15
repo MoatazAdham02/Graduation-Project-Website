@@ -121,7 +121,7 @@ section h2::before {
   transition: all 0.3s ease;
   background: var(--card-bg);
   width: 100%;
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .upload-area:hover {
@@ -142,8 +142,19 @@ section h2::before {
 
 .upload-area.has-file {
   border-color: #48bb78;
-  background: #f0fff4;
+  background: var(--bg-secondary);
   padding: 30px 20px;
+  opacity: 1;
+}
+
+.upload-area.has-file .file-info {
+  color: var(--text-primary);
+}
+
+.upload-area.has-file .file-name,
+.upload-area.has-file .file-size {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .upload-placeholder {
@@ -182,6 +193,7 @@ section h2::before {
   font-weight: 700;
   color: var(--text-primary);
   transition: all 0.3s ease;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .upload-area:hover .upload-text {
@@ -192,6 +204,7 @@ section h2::before {
 .upload-text strong {
   color: var(--primary);
   font-weight: 800;
+  text-shadow: 0 0 8px rgba(72, 202, 228, 0.3);
 }
 
 .upload-area:hover .upload-text strong {
@@ -200,16 +213,18 @@ section h2::before {
 }
 
 .upload-hint {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  opacity: 0.85;
   transition: all 0.3s ease;
 }
 
 .upload-area:hover .upload-hint {
-  color: var(--primary-light);
+  color: var(--text-primary);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
+  opacity: 1;
 }
 
 .file-info {
@@ -223,6 +238,8 @@ section h2::before {
   width: 48px;
   height: 48px;
   color: var(--primary);
+  opacity: 1;
+  flex-shrink: 0;
 }
 
 .file-icon svg {
@@ -236,15 +253,18 @@ section h2::before {
 }
 
 .file-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .file-size {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.9;
 }
 
 .change-file-button {
@@ -265,8 +285,15 @@ section h2::before {
 }
 
 /* Image Section */
+.image-display-wrapper {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
 .image-container-wrapper {
   position: relative;
+  flex: 1;
 }
 
 .image-container {
@@ -281,6 +308,15 @@ section h2::before {
   justify-content: center;
   position: relative;
   user-select: none;
+}
+
+/* Improve crosshair precision - use a smaller, more visible cursor */
+.image-container.annotating {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cline x1='12' y1='2' x2='12' y2='10' stroke='%2300B4D8' stroke-width='1.5'/%3E%3Cline x1='12' y1='14' x2='12' y2='22' stroke='%2300B4D8' stroke-width='1.5'/%3E%3Cline x1='2' y1='12' x2='10' y2='12' stroke='%2300B4D8' stroke-width='1.5'/%3E%3Cline x1='14' y1='12' x2='22' y2='12' stroke='%2300B4D8' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%2300B4D8'/%3E%3C/svg%3E") 12 12, crosshair !important;
+}
+
+.image-container.annotating * {
+  cursor: crosshair !important;
 }
 
 .loading-spinner {
@@ -741,6 +777,54 @@ section h2::before {
 
 .control-group input[type="range"] {
   width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--primary-light);
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(72, 202, 228, 0.4);
+}
+
+.control-group input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.control-group input[type="range"]::-moz-range-thumb:hover {
+  background: var(--primary-light);
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(72, 202, 228, 0.4);
+}
+
+.control-group input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
 }
 
 .zoom-controls {
@@ -850,6 +934,15 @@ section h2::before {
 @media (max-width: 768px) {
   .viewer-main {
     padding: 20px;
+  }
+
+  .image-display-wrapper {
+    flex-direction: column;
+  }
+
+  .image-info-panel {
+    max-width: 100%;
+    width: 100%;
   }
 
   section {
@@ -991,7 +1084,35 @@ section h2::before {
   color: var(--text-secondary);
 }
 
+.filter-slider .zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-slider .zoom-controls button {
+  width: 32px;
+  height: 32px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.filter-slider .zoom-controls button:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
 .filter-slider input[type="range"] {
+  flex: 1;
   width: 100%;
 }
 
@@ -1464,7 +1585,67 @@ section h2::before {
   transform: translateY(-1px);
 }
 
-/* Image Info Overlay */
+/* Image Info Panel - Beside the image */
+.image-info-panel {
+  background: rgba(0, 180, 216, 0.95);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 180, 216, 0.3);
+  min-width: 200px;
+  max-width: 250px;
+  font-size: 13px;
+  position: relative;
+}
+
+.image-info-panel .info-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.image-info-panel .info-item:last-child {
+  margin-bottom: 0;
+}
+
+.image-info-panel .info-label {
+  font-weight: 600;
+  opacity: 0.9;
+  font-size: 12px;
+}
+
+.image-info-panel .info-value {
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+}
+
+.image-info-panel .close-info-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.image-info-panel .close-info-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Image Info Overlay - Keep for backward compatibility if needed */
 .image-info-overlay {
   position: absolute;
   top: 16px;

@@ -113,7 +113,7 @@
 .nav-action-btn:hover {
   background: var(--primary);
   color: white;
-  transform: scale(1.05);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(72, 202, 228, 0.3);
 }
 

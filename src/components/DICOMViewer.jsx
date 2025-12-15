@@ -216,12 +216,6 @@ const DICOMViewer = () => {
             setCurrentFileIndex(prev => prev + 1)
           }
           break
-        case 'ArrowUp':
-          setWindowLevel(prev => ({ ...prev, level: Math.min(1000, prev.level + 10) }))
-          break
-        case 'ArrowDown':
-          setWindowLevel(prev => ({ ...prev, level: Math.max(0, prev.level - 10) }))
-          break
         case '+':
         case '=':
           setZoom(prev => Math.min(prev + 0.1, 5))
@@ -236,18 +230,6 @@ const DICOMViewer = () => {
         case 'f':
         case 'F':
           handleFitToWindow()
-          break
-        case '1':
-          applyPreset('softTissue')
-          break
-        case '2':
-          applyPreset('bone')
-          break
-        case '3':
-          applyPreset('lung')
-          break
-        case '4':
-          applyPreset('brain')
           break
         case 'i':
         case 'I':
@@ -549,28 +531,6 @@ const DICOMViewer = () => {
   const handleZoomToActual = useCallback(() => {
     setZoom(1)
     setPan({ x: 0, y: 0 })
-  }, [])
-
-  // Mouse wheel zoom
-  const handleWheel = useCallback((e) => {
-    if (!canvasRef.current) return
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -0.1 : 0.1
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    
-    setZoom(prevZoom => {
-      const newZoom = Math.max(0.5, Math.min(5, prevZoom + delta))
-      const zoomFactor = newZoom / prevZoom
-      
-      setPan(prevPan => ({
-        x: prevPan.x - (x - rect.width / 2) * (zoomFactor - 1),
-        y: prevPan.y - (y - rect.height / 2) * (zoomFactor - 1)
-      }))
-      
-      return newZoom
-    })
   }, [])
 
   // Get image coordinates from screen coordinates
@@ -1248,12 +1208,6 @@ const DICOMViewer = () => {
                           <kbd>→</kbd> <span>Next image</span>
                         </div>
                         <div className="shortcut-item">
-                          <kbd>↑</kbd> <span>Increase level</span>
-                        </div>
-                        <div className="shortcut-item">
-                          <kbd>↓</kbd> <span>Decrease level</span>
-                        </div>
-                        <div className="shortcut-item">
                           <kbd>Space</kbd> <span>Play/Pause series</span>
                         </div>
                       </div>
@@ -1270,24 +1224,6 @@ const DICOMViewer = () => {
                         </div>
                         <div className="shortcut-item">
                           <kbd>R</kbd> <span>Reset view</span>
-                        </div>
-                        <div className="shortcut-item">
-                          <kbd>Mouse Wheel</kbd> <span>Zoom at cursor</span>
-                        </div>
-                      </div>
-                      <div className="shortcut-category">
-                        <h4>Window/Level Presets</h4>
-                        <div className="shortcut-item">
-                          <kbd>1</kbd> <span>Soft Tissue</span>
-                        </div>
-                        <div className="shortcut-item">
-                          <kbd>2</kbd> <span>Bone</span>
-                        </div>
-                        <div className="shortcut-item">
-                          <kbd>3</kbd> <span>Lung</span>
-                        </div>
-                        <div className="shortcut-item">
-                          <kbd>4</kbd> <span>Brain</span>
                         </div>
                       </div>
                         <div className="shortcut-category">
@@ -1327,41 +1263,6 @@ const DICOMViewer = () => {
                   </div>
                 </div>
 
-                <div className="control-group">
-                  <label>Window: {windowLevel.window}</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="2000"
-                    value={windowLevel.window}
-                    onChange={(e) => handleWindowLevelChange('window', parseInt(e.target.value))}
-                  />
-                </div>
-
-                <div className="control-group">
-                  <label>Level: {windowLevel.level}</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1000"
-                    value={windowLevel.level}
-                    onChange={(e) => handleWindowLevelChange('level', parseInt(e.target.value))}
-                  />
-                </div>
-
-                {/* Window/Level Presets */}
-                <div className="control-group presets-group">
-                  <label>Presets:</label>
-                  <div className="preset-buttons">
-                    <button onClick={() => applyPreset('softTissue')} className="preset-btn" title="Soft Tissue (1)">Soft Tissue</button>
-                    <button onClick={() => applyPreset('bone')} className="preset-btn" title="Bone (2)">Bone</button>
-                    <button onClick={() => applyPreset('lung')} className="preset-btn" title="Lung (3)">Lung</button>
-                    <button onClick={() => applyPreset('brain')} className="preset-btn" title="Brain (4)">Brain</button>
-                    <button onClick={() => applyPreset('abdomen')} className="preset-btn">Abdomen</button>
-                    <button onClick={() => applyPreset('mediastinum')} className="preset-btn">Mediastinum</button>
-                  </div>
-                </div>
-
                 {/* Image Filters */}
                 <div className="control-group filters-group">
                   <label>Filters:</label>
@@ -1376,126 +1277,95 @@ const DICOMViewer = () => {
                     </label>
                     <div className="filter-slider">
                       <label>Contrast: {imageFilters.contrast.toFixed(1)}</label>
-                      <input
-                        type="range"
-                        min="0.5"
-                        max="2"
-                        step="0.1"
-                        value={imageFilters.contrast}
-                        onChange={(e) => setImageFilters(prev => ({ ...prev, contrast: parseFloat(e.target.value) }))}
-                      />
+                      <div className="zoom-controls">
+                        <button onClick={() => setImageFilters(prev => ({ ...prev, contrast: Math.max(0.5, prev.contrast - 0.1) }))}><FiZoomOut /></button>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="2"
+                          step="0.1"
+                          value={imageFilters.contrast}
+                          onChange={(e) => setImageFilters(prev => ({ ...prev, contrast: parseFloat(e.target.value) }))}
+                        />
+                        <button onClick={() => setImageFilters(prev => ({ ...prev, contrast: Math.min(2, prev.contrast + 0.1) }))}><FiZoomIn /></button>
+                      </div>
                     </div>
                     <div className="filter-slider">
                       <label>Brightness: {imageFilters.brightness}</label>
-                      <input
-                        type="range"
-                        min="-50"
-                        max="50"
-                        step="1"
-                        value={imageFilters.brightness}
-                        onChange={(e) => setImageFilters(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
-                      />
+                      <div className="zoom-controls">
+                        <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.max(-50, prev.brightness - 1) }))}><FiZoomOut /></button>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="50"
+                          step="1"
+                          value={imageFilters.brightness}
+                          onChange={(e) => setImageFilters(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
+                        />
+                        <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.min(50, prev.brightness + 1) }))}><FiZoomIn /></button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="image-container-wrapper">
-                <div 
-                  className="image-container" 
-                  ref={imageContainerRef}
-                  onWheel={handleWheel}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
-                  style={{ cursor: activeTool === 'pan' ? (isPanning ? 'grabbing' : 'grab') : activeTool === 'annotate' ? 'crosshair' : 'default' }}
-                >
-                  {isLoading ? (
-                    <div className="loading-spinner">
-                      <div className="spinner"></div>
-                      <p>Loading DICOM file...</p>
-                    </div>
-                  ) : (
-                    <div className="dicom-display">
-                      {currentFile ? (
-                        <div 
-                          className="image-wrapper"
-                          style={{
-                            transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px) rotate(${rotation}deg)`,
-                            transformOrigin: 'center center'
-                          }}
-                        >
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
-                          <canvas
-                            ref={canvasRef}
-                            className="dicom-canvas"
-                            width={currentDicomData?.width || 512}
-                            height={currentDicomData?.height || 512}
+              <div className="image-display-wrapper">
+                <div className="image-container-wrapper">
+                  <div 
+                    className={activeTool === 'annotate' ? 'image-container annotating' : 'image-container'}
+                    ref={imageContainerRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    style={{ cursor: activeTool === 'pan' ? (isPanning ? 'grabbing' : 'grab') : activeTool === 'annotate' ? 'crosshair' : 'default' }}
+                  >
+                    {isLoading ? (
+                      <div className="loading-spinner">
+                        <div className="spinner"></div>
+                        <p>Loading DICOM file...</p>
+                      </div>
+                    ) : (
+                      <div className="dicom-display">
+                        {currentFile ? (
+                          <div 
+                            className="image-wrapper"
                             style={{
-                              maxWidth: '100%',
-                              maxHeight: '600px',
-                              display: 'block'
+                              transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px) rotate(${rotation}deg)`,
+                              transformOrigin: 'center center'
                             }}
-                          />
-                          <AnnotationsOverlay
-                            annotations={annotations}
-                            currentAnnotation={currentAnnotation}
-                            zoom={zoom}
-                            pan={pan}
-                            canvasRef={canvasRef}
-                            activeTool={activeTool}
-                          />
-                          
-                          {/* Image Information Overlay */}
-                          {showImageInfo && filePreviews.length > 0 && (
-                            <div className="image-info-overlay">
-                              <div className="info-item">
-                                <span className="info-label">Slice:</span>
-                                <span className="info-value">{currentFileIndex + 1} / {filePreviews.length}</span>
-                              </div>
-                              {currentDicomData && (
-                                <>
-                                  {currentDicomData.modality && (
-                                    <div className="info-item">
-                                      <span className="info-label">Modality:</span>
-                                      <span className="info-value">{currentDicomData.modality}</span>
-                                    </div>
-                                  )}
-                                  <div className="info-item">
-                                    <span className="info-label">Size:</span>
-                                    <span className="info-value">{currentDicomData.width} × {currentDicomData.height}</span>
-                                  </div>
-                                  <div className="info-item">
-                                    <span className="info-label">Zoom:</span>
-                                    <span className="info-value">{Math.round(zoom * 100)}%</span>
-                                  </div>
-                                  <div className="info-item">
-                                    <span className="info-label">W/L:</span>
-                                    <span className="info-value">{windowLevel.window} / {windowLevel.level}</span>
-                                  </div>
-                                </>
-                              )}
+                          >
+                          <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <canvas
+                              ref={canvasRef}
+                              className="dicom-canvas"
+                              width={currentDicomData?.width || 512}
+                              height={currentDicomData?.height || 512}
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '600px',
+                                display: 'block'
+                              }}
+                            />
+                            <AnnotationsOverlay
+                              annotations={annotations}
+                              currentAnnotation={currentAnnotation}
+                              zoom={zoom}
+                              pan={pan}
+                              canvasRef={canvasRef}
+                              activeTool={activeTool}
+                            />
+                            
+                            {!showImageInfo && (
                               <button 
-                                onClick={() => setShowImageInfo(false)}
-                                className="close-info-btn"
-                                title="Hide info"
+                                onClick={() => setShowImageInfo(true)}
+                                className="show-info-btn"
+                                title="Show image info"
                               >
-                                <FiX size={14} />
+                                <FiInfo />
                               </button>
-                            </div>
-                          )}
-                          
-                          {!showImageInfo && (
-                            <button 
-                              onClick={() => setShowImageInfo(true)}
-                              className="show-info-btn"
-                              title="Show image info"
-                            >
-                              <FiInfo />
-                            </button>
-                          )}
-                        </div>
+                            )}
+                          </div>
                           {currentDicomData && (
                             <div className="dicom-info-overlay">
                               <p>Modality: {currentDicomData.modality || 'Unknown'}</p>
@@ -1523,6 +1393,42 @@ const DICOMViewer = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Image Information Panel - Beside the image */}
+                {showImageInfo && filePreviews.length > 0 && (
+                  <div className="image-info-panel">
+                    <div className="info-item">
+                      <span className="info-label">Slice:</span>
+                      <span className="info-value">{currentFileIndex + 1} / {filePreviews.length}</span>
+                    </div>
+                    {currentDicomData && (
+                      <>
+                        {currentDicomData.modality && (
+                          <div className="info-item">
+                            <span className="info-label">Modality:</span>
+                            <span className="info-value">{currentDicomData.modality}</span>
+                          </div>
+                        )}
+                        <div className="info-item">
+                          <span className="info-label">Size:</span>
+                          <span className="info-value">{currentDicomData.width} × {currentDicomData.height}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Zoom:</span>
+                          <span className="info-value">{Math.round(zoom * 100)}%</span>
+                        </div>
+                      </>
+                    )}
+                    <button 
+                      onClick={() => setShowImageInfo(false)}
+                      className="close-info-btn"
+                      title="Hide info"
+                    >
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
 
                 {/* Slice Scroller - Loops through all DICOM slices */}
                 {filePreviews.length > 0 && (
