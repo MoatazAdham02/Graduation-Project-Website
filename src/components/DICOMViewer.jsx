@@ -374,7 +374,8 @@ const DICOMViewer = () => {
       const reportData = generateReport(validFiles[0], patientInfo, studyInfo)
       
       // Notify user that report is ready (regardless of database save success)
-      notifyReportReady(patientInfo.name || 'Patient')
+      // Use the same patient name as in the report for consistency
+      notifyReportReady(reportData.patientName || 'Unknown Patient')
       
       // Try to save to database (but don't let failures prevent report generation)
       try {
