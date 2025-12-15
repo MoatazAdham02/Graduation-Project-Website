@@ -373,6 +373,9 @@ const DICOMViewer = () => {
       // This happens before any database operations so it always succeeds
       const reportData = generateReport(validFiles[0], patientInfo, studyInfo)
       
+      // Notify user that report is ready (regardless of database save success)
+      notifyReportReady(patientInfo.name || 'Patient')
+      
       // Try to save to database (but don't let failures prevent report generation)
       try {
         // Create or find patient from DICOM data
@@ -446,7 +449,7 @@ const DICOMViewer = () => {
             reportDate: new Date()
           })
           
-          notifyReportReady(patient.name || 'Patient')
+          // Report already saved to database successfully
         } catch (reportError) {
           console.error('Error saving report to database (report still generated locally):', reportError)
           // Report is already generated and displayed, so we just log the error
