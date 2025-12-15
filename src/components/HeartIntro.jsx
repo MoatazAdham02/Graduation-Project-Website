@@ -53,27 +53,23 @@ const HeartIntro = () => {
         <div className="heart-intro-text">
           <h1 className="intro-title">Plaqio</h1>
           <p className="intro-tagline">Detect. Analyze. Monitor</p>
-          <div className="intro-hint">
-            <span className="hint-icon">👆</span>
+          <div 
+            ref={heartRef}
+            className={`intro-hint ${isAnimating ? 'heart-animate' : ''}`}
+            onClick={handleHeartClick}
+            role="button"
+            tabIndex={0}
+            aria-label="Click to enter Plaqio"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleHeartClick()
+              }
+            }}
+          >
             <span>Click to begin</span>
+            <span className="heart-emoji">❤️</span>
           </div>
-        </div>
-
-        <div 
-          ref={heartRef}
-          className={`heart-intro-button ${isAnimating ? 'heart-animate' : ''}`}
-          onClick={handleHeartClick}
-          role="button"
-          tabIndex={0}
-          aria-label="Click to enter Plaqio"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              handleHeartClick()
-            }
-          }}
-        >
-          <button className="enter-button">Enter</button>
         </div>
 
         {/* Animated particles effect */}

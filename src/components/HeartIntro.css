@@ -88,29 +88,6 @@
   text-align: center;
 }
 
-/* Enter Button Container */
-.heart-intro-button {
-  position: relative;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  cursor: pointer;
-  z-index: 10;
-  pointer-events: auto;
-}
-
-.heart-intro-button:focus {
-  outline: 3px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 4px;
-  border-radius: 12px;
-}
-
-.heart-intro-button:hover {
-  transform: scale(1.05);
-}
-
-.heart-intro-button.heart-animate {
-  animation: button-pulse 0.5s ease-out forwards;
-}
-
 @keyframes button-pulse {
   0% {
     transform: scale(1);
@@ -123,29 +100,13 @@
   }
 }
 
-.enter-button {
-  padding: 16px 48px;
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
-  background: var(--gradient-primary);
-  backdrop-filter: blur(10px);
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 32px rgba(72, 202, 228, 0.4);
-}
-
-.enter-button:hover {
-  background: var(--gradient-light);
-  border-color: var(--primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(72, 202, 228, 0.6);
-}
-
-.enter-button:active {
-  transform: translateY(0);
+@keyframes float-button {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* Text content */
@@ -187,20 +148,68 @@
   justify-content: center;
   gap: 8px;
   margin-top: 20px;
-  padding: 12px 24px;
-  background: var(--bg-secondary);
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  background: var(--gradient-primary);
   backdrop-filter: blur(10px);
-  border-radius: 30px;
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 500;
-  animation: pulse-hint 2s ease-in-out infinite;
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(72, 202, 228, 0.4);
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+  animation: float-button 3s ease-in-out infinite;
 }
 
-.hint-icon {
-  font-size: 20px;
-  animation: bounce-hint 1s ease-in-out infinite;
+.intro-hint span:first-child {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.intro-hint:hover {
+  background: var(--gradient-light);
+  border-color: var(--primary-light);
+  transform: translateY(-12px);
+  box-shadow: 0 12px 40px rgba(72, 202, 228, 0.6);
+  animation: float-button 3s ease-in-out infinite, button-pulse 2s ease-in-out infinite;
+}
+
+.intro-hint:hover span:first-child {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.intro-hint:hover .heart-emoji {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  margin-left: 0;
+}
+
+.intro-hint:active {
+  transform: translateY(0);
+}
+
+.intro-hint:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.intro-hint.heart-animate {
+  animation: button-pulse 0.5s ease-out forwards;
+}
+
+.heart-emoji {
+  display: inline-block;
+  position: absolute;
+  opacity: 0;
+  transform: scale(0) translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 18px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 @keyframes pulse-hint {
@@ -273,15 +282,6 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .heart-intro-button {
-    width: auto;
-  }
-
-  .enter-button {
-    padding: 14px 40px;
-    font-size: 16px;
-  }
-
   .intro-title {
     font-size: 36px;
   }
@@ -291,26 +291,22 @@
   }
 
   .intro-hint {
-    font-size: 14px;
-    padding: 10px 20px;
+    padding: 14px 40px;
+    font-size: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .heart-intro-button {
-    width: auto;
-  }
-
-  .enter-button {
-    padding: 12px 32px;
-    font-size: 14px;
-  }
-
   .intro-title {
     font-size: 28px;
   }
 
   .intro-tagline {
+    font-size: 14px;
+  }
+
+  .intro-hint {
+    padding: 12px 32px;
     font-size: 14px;
   }
 
@@ -329,20 +325,18 @@
 
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .heart-intro-button,
-  .heart-intro-button.heart-animate,
-  .particle,
-  .gradient-orb,
   .intro-hint,
-  .hint-icon {
+  .intro-hint.heart-animate,
+  .particle,
+  .gradient-orb {
     animation: none;
   }
   
-  .heart-intro-button:hover {
+  .intro-hint:hover {
     transform: none;
   }
   
-  .enter-button {
+  .intro-hint {
     transition: none;
   }
 }
