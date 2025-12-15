@@ -23,7 +23,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   border: none;
   border-radius: 8px;
@@ -34,7 +34,7 @@
 }
 
 .add-button:hover {
-  background: var(--primary-dark, #5568d3);
+  background: var(--primary-dark, #0A5D61);
 }
 
 .filters-section {
@@ -107,7 +107,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   display: flex;
   align-items: center;
@@ -198,7 +198,7 @@
 
 .empty-state button {
   padding: 12px 24px;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   border: none;
   border-radius: 8px;
@@ -286,7 +286,7 @@
 }
 
 .modal-actions button[type="submit"] {
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
 }
 
@@ -341,7 +341,7 @@
 .close-modal {
   margin-top: 24px;
   padding: 10px 20px;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   border: none;
   border-radius: 6px;

@@ -1,13 +1,11 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { FiHome, FiUsers, FiFileText, FiBarChart2, FiMoon, FiSun, FiLogOut, FiMaximize2, FiInfo } from 'react-icons/fi'
+import { FiHome, FiUsers, FiFileText, FiBarChart2, FiLogOut, FiMaximize2, FiInfo } from 'react-icons/fi'
 import './Navigation.css'
 
 const Navigation = () => {
   const location = useLocation()
-  const { isDarkMode, toggleDarkMode } = useTheme()
   const { logout } = useAuth()
   const [isFullscreen, setIsFullscreen] = React.useState(false)
 
@@ -64,13 +62,6 @@ const Navigation = () => {
       </div>
 
       <div className="nav-actions">
-        <button 
-          className="nav-action-btn" 
-          onClick={toggleDarkMode}
-          title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-        >
-          {isDarkMode ? <FiSun /> : <FiMoon />}
-        </button>
         <button 
           className="nav-action-btn" 
           onClick={handleFullscreen}

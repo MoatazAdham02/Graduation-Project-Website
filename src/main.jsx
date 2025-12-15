@@ -53,7 +53,7 @@ try {
             onClick={() => window.location.reload()}
             style={{
               padding: '12px 24px',
-              background: '#667eea',
+              background: '#0D7377',
               color: 'white',
               border: 'none',
               borderRadius: '8px',

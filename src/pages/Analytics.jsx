@@ -70,7 +70,7 @@ const Analytics = () => {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(102, 126, 234, 0.1)', color: '#667eea' }}>
+          <div className="stat-icon" style={{ background: 'rgba(13, 115, 119, 0.1)', color: '#0D7377' }}>
             <FiUsers />
           </div>
           <div className="stat-content">

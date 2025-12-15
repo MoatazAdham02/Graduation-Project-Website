@@ -48,7 +48,7 @@
 
 .nav-button {
   padding: 10px 20px;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   border: none;
   border-radius: 8px;
@@ -59,7 +59,7 @@
 }
 
 .nav-button:hover:not(:disabled) {
-  background: var(--primary-dark, #5568d3);
+  background: var(--primary-dark, #0A5D61);
 }
 
 .nav-button:disabled {
@@ -82,7 +82,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   cursor: pointer;
 }
 
@@ -90,7 +90,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   cursor: pointer;
   border: none;
 }
@@ -122,14 +122,14 @@
 }
 
 .thumbnail:hover {
-  border-color: var(--primary, #667eea);
+  border-color: var(--primary, #0D7377);
   transform: scale(1.05);
 }
 
 .thumbnail.active {
-  border-color: var(--primary, #667eea);
+  border-color: var(--primary, #0D7377);
   border-width: 3px;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 0 0 3px rgba(13, 115, 119, 0.2);
 }
 
 .thumbnail img {

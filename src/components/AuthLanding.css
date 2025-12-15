@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   position: relative;
   overflow: hidden;
 }
@@ -31,13 +31,14 @@
 }
 
 .landing-content {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 60px 40px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
   position: relative;
   z-index: 1;
   text-align: center;
@@ -61,25 +62,25 @@
 }
 
 .landing-header h1 {
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 8px;
 }
 
 .landing-header .tagline {
-  color: var(--primary, #667eea);
+  color: var(--primary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .landing-header p {
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .auth-buttons {
@@ -102,35 +103,35 @@
 }
 
 .login-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(72, 202, 228, 0.4);
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px rgba(72, 202, 228, 0.5);
 }
 
 .signup-btn {
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+  background: var(--bg-secondary);
+  color: var(--primary);
+  border: 2px solid var(--primary);
 }
 
 .signup-btn:hover {
-  background: #667eea;
+  background: var(--primary);
   color: white;
   transform: translateY(-2px);
 }
 
 .landing-footer {
   padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border);
 }
 
 .landing-footer p {
-  color: #95a5a6;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 

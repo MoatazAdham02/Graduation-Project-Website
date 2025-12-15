@@ -118,7 +118,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   cursor: pointer;
 }
 
@@ -126,7 +126,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   cursor: pointer;
   border: none;
 }

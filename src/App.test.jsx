@@ -7,7 +7,7 @@ function TestApp() {
       padding: '40px', 
       textAlign: 'center',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #0D7377 0%, #14A085 100%)',
       color: 'white',
       display: 'flex',
       alignItems: 'center',

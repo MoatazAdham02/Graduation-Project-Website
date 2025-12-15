@@ -25,8 +25,8 @@
   margin: 0 auto 30px;
   border-radius: 50%;
   overflow: hidden;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  background: radial-gradient(circle, rgba(13, 115, 119, 0.1) 0%, transparent 70%);
+  box-shadow: 0 8px 32px rgba(13, 115, 119, 0.2);
   position: relative;
 }
 
@@ -60,8 +60,8 @@
   margin: 0 auto 20px;
   border-radius: 50%;
   overflow: hidden;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+  background: radial-gradient(circle, rgba(13, 115, 119, 0.1) 0%, transparent 70%);
+  box-shadow: 0 4px 20px rgba(13, 115, 119, 0.15);
 }
 
 /* Responsive adjustments */
@@ -92,8 +92,8 @@
 /* Dark mode adjustments */
 [data-theme="dark"] .heart-3d-auth,
 [data-theme="dark"] .heart-3d-form {
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.2) 0%, transparent 70%);
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  background: radial-gradient(circle, rgba(13, 115, 119, 0.2) 0%, transparent 70%);
+  box-shadow: 0 8px 32px rgba(13, 115, 119, 0.3);
 }
 
 [data-theme="dark"] .heart-3d-auth::before {

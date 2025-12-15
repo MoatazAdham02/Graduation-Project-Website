@@ -95,7 +95,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   display: flex;
   align-items: center;
@@ -138,7 +138,7 @@
 }
 
 .report-actions button:hover {
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
 }
 
@@ -305,7 +305,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
 }
 
@@ -384,7 +384,7 @@
   content: '•';
   position: absolute;
   left: 0;
-  color: var(--primary, #667eea);
+  color: var(--primary, #0D7377);
   font-weight: bold;
 }
 
@@ -400,7 +400,7 @@
 .close-modal {
   margin-top: 24px;
   padding: 10px 20px;
-  background: var(--primary, #667eea);
+  background: var(--primary, #0D7377);
   color: white;
   border: none;
   border-radius: 6px;

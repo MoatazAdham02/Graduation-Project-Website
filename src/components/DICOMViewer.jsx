@@ -38,11 +38,14 @@ const DICOMViewer = () => {
   // New state for enhancements
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
-  const [activeTool, setActiveTool] = useState('pan') // 'pan', 'measure', 'annotate'
-  const [measurements, setMeasurements] = useState([])
-  const [currentMeasurement, setCurrentMeasurement] = useState(null)
+  const [activeTool, setActiveTool] = useState('pan') // 'pan', 'annotate'
   const [annotations, setAnnotations] = useState([])
-  const [annotationType, setAnnotationType] = useState('arrow') // 'arrow', 'text', 'rectangle', 'circle', 'line'
+  const [currentAnnotation, setCurrentAnnotation] = useState(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [annotationType, setAnnotationType] = useState('arrow') // 'arrow', 'text', 'rectangle', 'circle', 'line', 'freehand'
+  const [annotationColor, setAnnotationColor] = useState('#00B4D8')
+  const [annotationThickness, setAnnotationThickness] = useState(2)
+  const [showImageInfo, setShowImageInfo] = useState(true)
   const [imageFilters, setImageFilters] = useState({
     invert: false,
     sharpen: false,
@@ -251,9 +254,6 @@ const DICOMViewer = () => {
           setImageFilters(prev => ({ ...prev, invert: !prev.invert }))
           break
         case 'm':
-        case 'M':
-          setActiveTool(activeTool === 'measure' ? 'pan' : 'measure')
-          break
         case 'a':
         case 'A':
           setActiveTool(activeTool === 'annotate' ? 'pan' : 'annotate')
@@ -573,75 +573,95 @@ const DICOMViewer = () => {
     })
   }, [])
 
+  // Get image coordinates from screen coordinates
+  const getImageCoordinates = useCallback((screenX, screenY) => {
+    if (!canvasRef.current) return { x: 0, y: 0 }
+    const rect = canvasRef.current.getBoundingClientRect()
+    const canvasCenterX = rect.width / 2
+    const canvasCenterY = rect.height / 2
+    const x = (screenX - rect.left - canvasCenterX - pan.x) / zoom
+    const y = (screenY - rect.top - canvasCenterY - pan.y) / zoom
+    return { x, y }
+  }, [zoom, pan])
+
   // Pan with mouse drag
   const handleMouseDown = useCallback((e) => {
     if (!canvasRef.current) return
     
     if (activeTool === 'pan' && e.button === 0) {
       setIsPanning(true)
-      setPan(prevPan => {
-        setPanStart({ x: e.clientX - prevPan.x, y: e.clientY - prevPan.y })
-        return prevPan
-      })
-    } else if (activeTool === 'measure') {
-      const rect = canvasRef.current.getBoundingClientRect()
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+    } else if (activeTool === 'annotate' && e.button === 0) {
+      const coords = getImageCoordinates(e.clientX, e.clientY)
+      setIsDrawing(true)
       
-      // Calculate click position relative to canvas center, accounting for zoom and pan
-      const clickX = e.clientX - rect.left
-      const clickY = e.clientY - rect.top
-      const canvasCenterX = rect.width / 2
-      const canvasCenterY = rect.height / 2
-      
-      // Convert screen coordinates to image coordinates using current state values
-      const x = (clickX - canvasCenterX - pan.x) / zoom
-      const y = (clickY - canvasCenterY - pan.y) / zoom
-      
-      // Access currentDicomData from the state array using current index
-      const currentDicomData = dicomData[currentFileIndex]
-      
-      if (!currentMeasurement) {
-        setCurrentMeasurement({ points: [{ x, y }], id: Date.now() })
+      if (annotationType === 'freehand') {
+        setCurrentAnnotation({
+          id: Date.now(),
+          type: 'freehand',
+          points: [coords],
+          color: annotationColor,
+          thickness: annotationThickness,
+          sliceIndex: currentFileIndex
+        })
       } else {
-        const newMeasurement = {
-          ...currentMeasurement,
-          points: [...currentMeasurement.points, { x, y }]
-        }
-        if (newMeasurement.points.length === 2) {
-          // Calculate distance
-          const p1 = newMeasurement.points[0]
-          const p2 = newMeasurement.points[1]
-          const pixelSpacing = currentDicomData?.pixelSpacing?.split('\\') || ['1', '1']
-          const spacingX = parseFloat(pixelSpacing[0]) || 1
-          const spacingY = parseFloat(pixelSpacing[1]) || spacingX
-          const dx = (p2.x - p1.x) * spacingX
-          const dy = (p2.y - p1.y) * spacingY
-          const distance = Math.sqrt(dx * dx + dy * dy)
-          newMeasurement.distance = distance.toFixed(2)
-          newMeasurement.unit = 'mm'
-          setMeasurements([...measurements, newMeasurement])
-          setCurrentMeasurement(null)
-        } else {
-          setCurrentMeasurement(newMeasurement)
-        }
+        setCurrentAnnotation({
+          id: Date.now(),
+          type: annotationType,
+          startPoint: coords,
+          endPoint: coords,
+          color: annotationColor,
+          thickness: annotationThickness,
+          sliceIndex: currentFileIndex
+        })
       }
     }
-  }, [activeTool, zoom, pan, currentMeasurement, measurements, dicomData, currentFileIndex])
+  }, [activeTool, pan, getImageCoordinates, annotationType, annotationColor, annotationThickness, currentFileIndex])
 
   const handleMouseMove = useCallback((e) => {
     if (isPanning && activeTool === 'pan') {
-      setPanStart(prevPanStart => {
-        setPan({
-          x: e.clientX - prevPanStart.x,
-          y: e.clientY - prevPanStart.y
-        })
-        return prevPanStart
+      setPan({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y
       })
+    } else if (isDrawing && activeTool === 'annotate' && currentAnnotation) {
+      const coords = getImageCoordinates(e.clientX, e.clientY)
+      
+      if (annotationType === 'freehand') {
+        setCurrentAnnotation(prev => ({
+          ...prev,
+          points: [...prev.points, coords]
+        }))
+      } else {
+        setCurrentAnnotation(prev => ({
+          ...prev,
+          endPoint: coords
+        }))
+      }
     }
-  }, [isPanning, activeTool])
+  }, [isPanning, isDrawing, activeTool, panStart, currentAnnotation, annotationType, getImageCoordinates])
 
   const handleMouseUp = useCallback(() => {
-    setIsPanning(false)
-  }, [])
+    if (isPanning) {
+      setIsPanning(false)
+    }
+    if (isDrawing && currentAnnotation) {
+      setIsDrawing(false)
+      // Only save if annotation has meaningful content
+      if (annotationType === 'freehand' && currentAnnotation.points.length > 1) {
+        setAnnotations(prev => [...prev, currentAnnotation])
+      } else if (annotationType !== 'freehand') {
+        const dx = currentAnnotation.endPoint.x - currentAnnotation.startPoint.x
+        const dy = currentAnnotation.endPoint.y - currentAnnotation.startPoint.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        // Only save if annotation has minimum size
+        if (distance > 5) {
+          setAnnotations(prev => [...prev, currentAnnotation])
+        }
+      }
+      setCurrentAnnotation(null)
+    }
+  }, [isPanning, isDrawing, currentAnnotation, annotationType])
 
   // Image filters - use useCallback to avoid dependency issues
   const applyFilters = useCallback((imageData) => {
@@ -829,15 +849,34 @@ const DICOMViewer = () => {
   const currentPreview = filePreviews[currentFileIndex]
   const currentDicomData = dicomData[currentFileIndex]
 
-  // Measurements Overlay Component
-  const MeasurementsOverlay = ({ measurements, currentMeasurement, zoom, pan, canvasRef, activeTool }) => {
+  // Helper function to draw arrow
+  const drawArrow = useCallback((ctx, fromX, fromY, toX, toY, color, thickness) => {
+    ctx.strokeStyle = color
+    ctx.lineWidth = thickness
+    const headlen = 10
+    const angle = Math.atan2(toY - fromY, toX - fromX)
+    
+    ctx.beginPath()
+    ctx.moveTo(fromX, fromY)
+    ctx.lineTo(toX, toY)
+    ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6))
+    ctx.moveTo(toX, toY)
+    ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6))
+    ctx.stroke()
+  }, [])
+
+  // Annotations Overlay Component
+  const AnnotationsOverlay = ({ annotations, currentAnnotation, zoom, pan, canvasRef, activeTool }) => {
     const overlayRef = useRef(null)
     
     useEffect(() => {
       if (!overlayRef.current || !canvasRef.current) return
       
       const overlay = overlayRef.current
-      overlay.innerHTML = ''
+      const ctx = overlay.getContext('2d')
+      overlay.width = overlay.offsetWidth
+      overlay.height = overlay.offsetHeight
+      ctx.clearRect(0, 0, overlay.width, overlay.height)
       
       const canvas = canvasRef.current
       const rect = canvas.getBoundingClientRect()
@@ -849,64 +888,119 @@ const DICOMViewer = () => {
       const scaleY = displayHeight / canvasHeight
       const scale = Math.min(scaleX, scaleY)
       
-      // Draw measurements
-      measurements.forEach(measurement => {
-        if (measurement.points.length === 2) {
-          const p1 = {
-            x: (measurement.points[0].x * scale * zoom) + (displayWidth / 2) + pan.x,
-            y: (measurement.points[0].y * scale * zoom) + (displayHeight / 2) + pan.y
+      // Draw saved annotations for current slice
+      annotations
+        .filter(ann => ann.sliceIndex === currentFileIndex)
+        .forEach(annotation => {
+          ctx.strokeStyle = annotation.color
+          ctx.lineWidth = annotation.thickness
+          ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
+          
+          if (annotation.type === 'freehand' && annotation.points.length > 1) {
+            ctx.beginPath()
+            const firstPoint = annotation.points[0]
+            const screenX = (firstPoint.x * scale * zoom) + (displayWidth / 2) + pan.x
+            const screenY = (firstPoint.y * scale * zoom) + (displayHeight / 2) + pan.y
+            ctx.moveTo(screenX, screenY)
+            
+            annotation.points.slice(1).forEach(point => {
+              const x = (point.x * scale * zoom) + (displayWidth / 2) + pan.x
+              const y = (point.y * scale * zoom) + (displayHeight / 2) + pan.y
+              ctx.lineTo(x, y)
+            })
+            ctx.stroke()
+          } else if (annotation.startPoint && annotation.endPoint) {
+            const startX = (annotation.startPoint.x * scale * zoom) + (displayWidth / 2) + pan.x
+            const startY = (annotation.startPoint.y * scale * zoom) + (displayHeight / 2) + pan.y
+            const endX = (annotation.endPoint.x * scale * zoom) + (displayWidth / 2) + pan.x
+            const endY = (annotation.endPoint.y * scale * zoom) + (displayHeight / 2) + pan.y
+            
+            if (annotation.type === 'arrow') {
+              drawArrow(ctx, startX, startY, endX, endY, annotation.color, annotation.thickness)
+            } else if (annotation.type === 'line') {
+              ctx.beginPath()
+              ctx.moveTo(startX, startY)
+              ctx.lineTo(endX, endY)
+              ctx.stroke()
+            } else if (annotation.type === 'rectangle') {
+              ctx.strokeRect(
+                Math.min(startX, endX),
+                Math.min(startY, endY),
+                Math.abs(endX - startX),
+                Math.abs(endY - startY)
+              )
+            } else if (annotation.type === 'circle') {
+              const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2))
+              ctx.beginPath()
+              ctx.arc(startX, startY, radius, 0, 2 * Math.PI)
+              ctx.stroke()
+            }
           }
-          const p2 = {
-            x: (measurement.points[1].x * scale * zoom) + (displayWidth / 2) + pan.x,
-            y: (measurement.points[1].y * scale * zoom) + (displayHeight / 2) + pan.y
-          }
-          
-          const line = document.createElement('div')
-          line.className = 'measurement-line'
-          const dx = p2.x - p1.x
-          const dy = p2.y - p1.y
-          const length = Math.sqrt(dx * dx + dy * dy)
-          const angle = Math.atan2(dy, dx) * 180 / Math.PI
-          
-          line.style.left = `${p1.x}px`
-          line.style.top = `${p1.y}px`
-          line.style.width = `${length}px`
-          line.style.transform = `rotate(${angle}deg)`
-          line.style.transformOrigin = '0 50%'
-          
-          const label = document.createElement('div')
-          label.className = 'measurement-label'
-          label.textContent = `${measurement.distance} ${measurement.unit}`
-          label.style.left = `${(p1.x + p2.x) / 2}px`
-          label.style.top = `${(p1.y + p2.y) / 2 - 15}px`
-          
-          overlay.appendChild(line)
-          overlay.appendChild(label)
-        }
-      })
+        })
       
-      // Draw current measurement point
-      if (currentMeasurement && currentMeasurement.points.length === 1) {
-        const point = currentMeasurement.points[0]
-        const dot = document.createElement('div')
-        dot.className = 'measurement-dot'
-        dot.style.left = `${(point.x * scale * zoom) + (displayWidth / 2) + pan.x}px`
-        dot.style.top = `${(point.y * scale * zoom) + (displayHeight / 2) + pan.y}px`
-        overlay.appendChild(dot)
+      // Draw current annotation being drawn
+      if (currentAnnotation) {
+        ctx.strokeStyle = currentAnnotation.color
+        ctx.lineWidth = currentAnnotation.thickness
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        
+        if (currentAnnotation.type === 'freehand' && currentAnnotation.points.length > 1) {
+          ctx.beginPath()
+          const firstPoint = currentAnnotation.points[0]
+          const screenX = (firstPoint.x * scale * zoom) + (displayWidth / 2) + pan.x
+          const screenY = (firstPoint.y * scale * zoom) + (displayHeight / 2) + pan.y
+          ctx.moveTo(screenX, screenY)
+          
+          currentAnnotation.points.slice(1).forEach(point => {
+            const x = (point.x * scale * zoom) + (displayWidth / 2) + pan.x
+            const y = (point.y * scale * zoom) + (displayHeight / 2) + pan.y
+            ctx.lineTo(x, y)
+          })
+          ctx.stroke()
+        } else if (currentAnnotation.startPoint && currentAnnotation.endPoint) {
+          const startX = (currentAnnotation.startPoint.x * scale * zoom) + (displayWidth / 2) + pan.x
+          const startY = (currentAnnotation.startPoint.y * scale * zoom) + (displayHeight / 2) + pan.y
+          const endX = (currentAnnotation.endPoint.x * scale * zoom) + (displayWidth / 2) + pan.x
+          const endY = (currentAnnotation.endPoint.y * scale * zoom) + (displayHeight / 2) + pan.y
+          
+          if (currentAnnotation.type === 'arrow') {
+            drawArrow(ctx, startX, startY, endX, endY, currentAnnotation.color, currentAnnotation.thickness)
+          } else if (currentAnnotation.type === 'line') {
+            ctx.beginPath()
+            ctx.moveTo(startX, startY)
+            ctx.lineTo(endX, endY)
+            ctx.stroke()
+          } else if (currentAnnotation.type === 'rectangle') {
+            ctx.strokeRect(
+              Math.min(startX, endX),
+              Math.min(startY, endY),
+              Math.abs(endX - startX),
+              Math.abs(endY - startY)
+            )
+          } else if (currentAnnotation.type === 'circle') {
+            const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2))
+            ctx.beginPath()
+            ctx.arc(startX, startY, radius, 0, 2 * Math.PI)
+            ctx.stroke()
+          }
+        }
       }
-    }, [measurements, currentMeasurement, zoom, pan, canvasRef])
+    }, [annotations, currentAnnotation, zoom, pan, canvasRef, currentFileIndex, drawArrow])
     
     return (
-      <div 
+      <canvas
         ref={overlayRef}
-        className="measurements-overlay" 
+        className="annotations-overlay"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: '100%',
-          pointerEvents: activeTool === 'measure' ? 'auto' : 'none'
+          pointerEvents: activeTool === 'annotate' ? 'auto' : 'none',
+          zIndex: 10
         }}
       />
     )
@@ -1052,13 +1146,6 @@ const DICOMViewer = () => {
                     <FiMove /> Pan
                   </button>
                   <button 
-                    className={`tool-btn ${activeTool === 'measure' ? 'active' : ''}`}
-                    onClick={() => setActiveTool('measure')}
-                    title="Measure (M)"
-                  >
-                    <FiActivity /> Measure
-                  </button>
-                  <button 
                     className={`tool-btn ${activeTool === 'annotate' ? 'active' : ''}`}
                     onClick={() => setActiveTool('annotate')}
                     title="Annotate (A)"
@@ -1066,6 +1153,53 @@ const DICOMViewer = () => {
                     <FiEdit3 /> Annotate
                   </button>
                 </div>
+                
+                {/* Annotation Controls */}
+                {activeTool === 'annotate' && (
+                  <div className="annotation-controls">
+                    <label>Type:</label>
+                    <select 
+                      value={annotationType} 
+                      onChange={(e) => setAnnotationType(e.target.value)}
+                      className="annotation-type-select"
+                    >
+                      <option value="arrow">Arrow</option>
+                      <option value="line">Line</option>
+                      <option value="rectangle">Rectangle</option>
+                      <option value="circle">Circle</option>
+                      <option value="freehand">Freehand</option>
+                    </select>
+                    
+                    <label>Color:</label>
+                    <input 
+                      type="color" 
+                      value={annotationColor} 
+                      onChange={(e) => setAnnotationColor(e.target.value)}
+                      className="color-picker"
+                    />
+                    
+                    <label>Thickness:</label>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="10" 
+                      value={annotationThickness} 
+                      onChange={(e) => setAnnotationThickness(parseInt(e.target.value))}
+                      className="thickness-slider"
+                    />
+                    <span>{annotationThickness}px</span>
+                    
+                    {annotations.filter(a => a.sliceIndex === currentFileIndex).length > 0 && (
+                      <button 
+                        onClick={() => setAnnotations(prev => prev.filter(a => a.sliceIndex !== currentFileIndex))}
+                        className="clear-annotations-btn"
+                        title="Clear annotations on this slice"
+                      >
+                        <FiX /> Clear
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="toolbar-group">
                   <button onClick={handleFitToWindow} title="Fit to Window (F)">
                     <FiMaximize2 /> Fit
@@ -1156,13 +1290,13 @@ const DICOMViewer = () => {
                           <kbd>4</kbd> <span>Brain</span>
                         </div>
                       </div>
-                      <div className="shortcut-category">
+                        <div className="shortcut-category">
                         <h4>Tools</h4>
                         <div className="shortcut-item">
-                          <kbd>M</kbd> <span>Toggle measurement</span>
+                          <kbd>A</kbd> <span>Toggle annotation</span>
                         </div>
                         <div className="shortcut-item">
-                          <kbd>A</kbd> <span>Toggle annotation</span>
+                          <kbd>P</kbd> <span>Pan tool</span>
                         </div>
                         <div className="shortcut-item">
                           <kbd>I</kbd> <span>Invert image</span>
@@ -1275,7 +1409,7 @@ const DICOMViewer = () => {
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
-                  style={{ cursor: activeTool === 'pan' ? (isPanning ? 'grabbing' : 'grab') : activeTool === 'measure' ? 'crosshair' : 'default' }}
+                  style={{ cursor: activeTool === 'pan' ? (isPanning ? 'grabbing' : 'grab') : activeTool === 'annotate' ? 'crosshair' : 'default' }}
                 >
                   {isLoading ? (
                     <div className="loading-spinner">
@@ -1304,14 +1438,63 @@ const DICOMViewer = () => {
                               display: 'block'
                             }}
                           />
-                          <MeasurementsOverlay
-                            measurements={measurements}
-                            currentMeasurement={currentMeasurement}
+                          <AnnotationsOverlay
+                            annotations={annotations}
+                            currentAnnotation={currentAnnotation}
                             zoom={zoom}
                             pan={pan}
                             canvasRef={canvasRef}
                             activeTool={activeTool}
                           />
+                          
+                          {/* Image Information Overlay */}
+                          {showImageInfo && filePreviews.length > 0 && (
+                            <div className="image-info-overlay">
+                              <div className="info-item">
+                                <span className="info-label">Slice:</span>
+                                <span className="info-value">{currentFileIndex + 1} / {filePreviews.length}</span>
+                              </div>
+                              {currentDicomData && (
+                                <>
+                                  {currentDicomData.modality && (
+                                    <div className="info-item">
+                                      <span className="info-label">Modality:</span>
+                                      <span className="info-value">{currentDicomData.modality}</span>
+                                    </div>
+                                  )}
+                                  <div className="info-item">
+                                    <span className="info-label">Size:</span>
+                                    <span className="info-value">{currentDicomData.width} × {currentDicomData.height}</span>
+                                  </div>
+                                  <div className="info-item">
+                                    <span className="info-label">Zoom:</span>
+                                    <span className="info-value">{Math.round(zoom * 100)}%</span>
+                                  </div>
+                                  <div className="info-item">
+                                    <span className="info-label">W/L:</span>
+                                    <span className="info-value">{windowLevel.window} / {windowLevel.level}</span>
+                                  </div>
+                                </>
+                              )}
+                              <button 
+                                onClick={() => setShowImageInfo(false)}
+                                className="close-info-btn"
+                                title="Hide info"
+                              >
+                                <FiX size={14} />
+                              </button>
+                            </div>
+                          )}
+                          
+                          {!showImageInfo && (
+                            <button 
+                              onClick={() => setShowImageInfo(true)}
+                              className="show-info-btn"
+                              title="Show image info"
+                            >
+                              <FiInfo />
+                            </button>
+                          )}
                         </div>
                           {currentDicomData && (
                             <div className="dicom-info-overlay">
@@ -1320,8 +1503,14 @@ const DICOMViewer = () => {
                               {currentDicomData.pixelSpacing && (
                                 <p>Pixel Spacing: {currentDicomData.pixelSpacing}</p>
                               )}
-                              {activeTool === 'measure' && (
-                                <p className="tool-hint">Click two points to measure distance</p>
+                              {activeTool === 'annotate' && (
+                                <p className="tool-hint">
+                                  {annotationType === 'freehand' ? 'Draw freehand' : 
+                                   annotationType === 'arrow' ? 'Click and drag to draw arrow' :
+                                   annotationType === 'line' ? 'Click and drag to draw line' :
+                                   annotationType === 'rectangle' ? 'Click and drag to draw rectangle' :
+                                   annotationType === 'circle' ? 'Click and drag to draw circle' : 'Annotate'}
+                                </p>
                               )}
                             </div>
                           )}
@@ -1409,21 +1598,22 @@ const DICOMViewer = () => {
                 )}
               </div>
 
-              {/* Measurements Panel */}
-              {measurements.length > 0 && (
-                <div className="measurements-panel">
-                  <h4>Measurements</h4>
-                  <div className="measurements-list">
-                    {measurements.map((measurement, idx) => (
-                      <div key={measurement.id} className="measurement-item">
-                        <span>Measurement {idx + 1}: {measurement.distance} {measurement.unit}</span>
-                        <button onClick={() => setMeasurements(measurements.filter(m => m.id !== measurement.id))}>
-                          <FiX />
-                        </button>
-                      </div>
-                    ))}
+              {/* Annotations Panel */}
+              {annotations.filter(a => a.sliceIndex === currentFileIndex).length > 0 && (
+                <div className="annotations-panel">
+                  <h4>Annotations ({annotations.filter(a => a.sliceIndex === currentFileIndex).length})</h4>
+                  <div className="annotations-list">
+                    {annotations
+                      .filter(a => a.sliceIndex === currentFileIndex)
+                      .map((annotation, idx) => (
+                        <div key={annotation.id} className="annotation-item">
+                          <span>{annotation.type.charAt(0).toUpperCase() + annotation.type.slice(1)} {idx + 1}</span>
+                          <button onClick={() => setAnnotations(prev => prev.filter(a => a.id !== annotation.id))}>
+                            <FiX />
+                          </button>
+                        </div>
+                      ))}
                   </div>
-                  <button onClick={() => setMeasurements([])} className="clear-btn">Clear All</button>
                 </div>
               )}
 

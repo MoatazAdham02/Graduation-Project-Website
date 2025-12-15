@@ -35,7 +35,7 @@ function LoadingSpinner() {
   return (
     <Html center>
       <div style={{ 
-        color: '#667eea', 
+        color: '#0D7377', 
         fontSize: '14px',
         fontFamily: 'Inter, sans-serif',
         display: 'flex',
@@ -46,8 +46,8 @@ function LoadingSpinner() {
         <div style={{
           width: '40px',
           height: '40px',
-          border: '3px solid rgba(102, 126, 234, 0.2)',
-          borderTopColor: '#667eea',
+          border: '3px solid rgba(13, 115, 119, 0.2)',
+          borderTopColor: '#0D7377',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite'
         }} />

@@ -8,7 +8,7 @@
 }
 
 .viewer-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
   padding: 20px 40px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -107,31 +107,37 @@ section h2::before {
   content: '';
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   border-radius: 2px;
 }
 
 /* Upload Section */
 .upload-area {
-  border: 3px dashed #cbd5e0;
+  border: 3px dashed var(--border);
   border-radius: 12px;
   padding: 40px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #f8f9fa;
+  background: var(--card-bg);
   width: 100%;
+  opacity: 0.7;
 }
 
 .upload-area:hover {
-  border-color: #667eea;
-  background: #f0f4ff;
+  border-color: var(--primary);
+  background: var(--bg-secondary);
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(72, 202, 228, 0.3);
 }
 
 .upload-area.drag-active {
-  border-color: #667eea;
-  background: #e8edff;
+  border-color: var(--primary);
+  background: var(--bg-secondary);
   transform: scale(1.02);
+  opacity: 1;
+  box-shadow: 0 8px 24px rgba(72, 202, 228, 0.4);
 }
 
 .upload-area.has-file {
@@ -145,12 +151,25 @@ section h2::before {
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover .upload-placeholder {
+  gap: 20px;
 }
 
 .upload-icon {
   width: 64px;
   height: 64px;
-  color: #667eea;
+  color: var(--primary);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover .upload-icon {
+  opacity: 1;
+  transform: scale(1.1);
+  color: var(--primary-light);
 }
 
 .upload-icon svg {
@@ -160,12 +179,37 @@ section h2::before {
 
 .upload-text {
   font-size: 18px;
+  font-weight: 700;
   color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover .upload-text {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.upload-text strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.upload-area:hover .upload-text strong {
+  color: var(--primary-light);
+  text-shadow: 0 0 10px rgba(72, 202, 228, 0.5);
 }
 
 .upload-hint {
   font-size: 14px;
+  font-weight: 600;
   color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover .upload-hint {
+  color: var(--primary-light);
+  font-weight: 700;
+  font-size: 15px;
 }
 
 .file-info {
@@ -178,7 +222,7 @@ section h2::before {
 .file-icon {
   width: 48px;
   height: 48px;
-  color: #667eea;
+  color: var(--primary);
 }
 
 .file-icon svg {
@@ -205,7 +249,7 @@ section h2::before {
 
 .change-file-button {
   padding: 10px 20px;
-  background: #667eea;
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -215,9 +259,9 @@ section h2::before {
 }
 
 .change-file-button:hover {
-  background: #5568d3;
+  background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(13, 115, 119, 0.4);
 }
 
 /* Image Section */
@@ -251,7 +295,7 @@ section h2::before {
   width: 50px;
   height: 50px;
   border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #667eea;
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -551,7 +595,7 @@ section h2::before {
   content: '→';
   position: absolute;
   left: 16px;
-  color: #667eea;
+  color: var(--primary);
   font-weight: bold;
 }
 
@@ -1204,8 +1248,8 @@ section h2::before {
   word-break: break-word;
 }
 
-/* Measurements Panel */
-.measurements-panel {
+/* Annotations Panel */
+.annotations-panel {
   margin-top: 16px;
   padding: 16px;
   background: var(--bg-secondary);
@@ -1213,20 +1257,20 @@ section h2::before {
   border: 1px solid var(--border);
 }
 
-.measurements-panel h4 {
+.annotations-panel h4 {
   margin: 0 0 12px 0;
   color: var(--text-primary);
   font-size: 16px;
 }
 
-.measurements-list {
+.annotations-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.measurement-item {
+.annotation-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1237,7 +1281,7 @@ section h2::before {
   color: var(--text-primary);
 }
 
-.measurement-item button {
+.annotation-item button {
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -1250,7 +1294,7 @@ section h2::before {
   transition: all 0.2s;
 }
 
-.measurement-item button:hover {
+.annotation-item button:hover {
   background: var(--bg-tertiary);
   color: #dc3545;
 }
@@ -1321,7 +1365,7 @@ section h2::before {
 [data-theme="dark"] .toolbar,
 [data-theme="dark"] .thumbnail-strip,
 [data-theme="dark"] .metadata-panel,
-[data-theme="dark"] .measurements-panel {
+[data-theme="dark"] .annotations-panel {
   background: var(--bg-secondary);
   border-color: var(--border);
 }
@@ -1350,8 +1394,8 @@ section h2::before {
   color: var(--text-primary);
 }
 
-/* Measurements Overlay */
-.measurements-overlay {
+/* Annotations Overlay */
+.annotations-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -1360,38 +1404,151 @@ section h2::before {
   pointer-events: none;
 }
 
-.measurement-line {
-  position: absolute;
-  height: 2px;
-  background: #00ff00;
-  transform-origin: 0 50%;
-  pointer-events: none;
-  z-index: 10;
+/* Annotation Controls */
+.annotation-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-left: 12px;
 }
 
-.measurement-label {
-  position: absolute;
-  background: rgba(0, 255, 0, 0.8);
-  color: #000;
-  padding: 2px 6px;
-  border-radius: 4px;
+.annotation-controls label {
   font-size: 12px;
-  font-weight: 600;
-  pointer-events: none;
-  z-index: 11;
-  transform: translateX(-50%);
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-.measurement-dot {
+.annotation-type-select {
+  padding: 6px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.color-picker {
+  width: 40px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.thickness-slider {
+  width: 80px;
+}
+
+.clear-annotations-btn {
+  padding: 6px 12px;
+  background: var(--error);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.clear-annotations-btn:hover {
+  background: #dc3545;
+  transform: translateY(-1px);
+}
+
+/* Image Info Overlay */
+.image-info-overlay {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #00ff00;
-  border: 2px solid #000;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 10;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 180, 216, 0.95);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 180, 216, 0.3);
+  z-index: 20;
+  min-width: 180px;
+  font-size: 13px;
+}
+
+.image-info-overlay .info-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+
+.image-info-overlay .info-item:last-child {
+  margin-bottom: 0;
+}
+
+.image-info-overlay .info-label {
+  font-weight: 600;
+  opacity: 0.9;
+  font-size: 12px;
+}
+
+.image-info-overlay .info-value {
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+}
+
+.close-info-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-info-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.show-info-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 180, 216, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.2s;
+  box-shadow: 0 2px 10px rgba(0, 180, 216, 0.3);
+}
+
+.show-info-btn:hover {
+  background: rgba(0, 180, 216, 1);
+  transform: scale(1.1);
 }
 
 /* Keyboard Shortcuts Modal */
