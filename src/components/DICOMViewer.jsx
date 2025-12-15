@@ -359,17 +359,22 @@ const DICOMViewer = () => {
     // Extract patient and study data from first DICOM file
     const firstDicomData = parsedData[0]
     
-    // Generate report
+    // Generate report - Always generate report, even if database operations fail
     setTimeout(async () => {
+      setIsLoading(false)
+      setUploadProgress(0)
+      notifyStudyComplete(validFiles[0].name)
+      
+      // Extract patient information from DICOM
+      const patientInfo = firstDicomData?.patient || {}
+      const studyInfo = firstDicomData?.study || {}
+      
+      // Generate report FIRST - this ensures the report is always created
+      // This happens before any database operations so it always succeeds
+      const reportData = generateReport(validFiles[0], patientInfo, studyInfo)
+      
+      // Try to save to database (but don't let failures prevent report generation)
       try {
-        setIsLoading(false)
-        setUploadProgress(0)
-        notifyStudyComplete(validFiles[0].name)
-        
-        // Extract patient information from DICOM
-        const patientInfo = firstDicomData?.patient || {}
-        const studyInfo = firstDicomData?.study || {}
-        
         // Create or find patient from DICOM data
         let patient
         if (patientInfo.patientId && patientInfo.name) {
@@ -428,26 +433,27 @@ const DICOMViewer = () => {
           }
         })
         
-        // Generate report data
-        const reportData = generateReport(validFiles[0], patientInfo, studyInfo)
-        
         // Create report in database
-        const generatedReport = await addReport({
-          studyId: study._id || study.id,
-          patientId: patient._id || patient.id,
-          reportId: `RPT-${Date.now()}`,
-          findings: reportData.findings || [],
-          recommendations: reportData.recommendations || [],
-          physicianName: reportData.physician || '',
-          physicianTitle: 'MD',
-          reportDate: new Date()
-        })
-        
-        notifyReportReady(patient.name || 'Patient')
+        try {
+          const generatedReport = await addReport({
+            studyId: study._id || study.id,
+            patientId: patient._id || patient.id,
+            reportId: `RPT-${Date.now()}`,
+            findings: reportData.findings || [],
+            recommendations: reportData.recommendations || [],
+            physicianName: reportData.physician || '',
+            physicianTitle: 'MD',
+            reportDate: new Date()
+          })
+          
+          notifyReportReady(patient.name || 'Patient')
+        } catch (reportError) {
+          console.error('Error saving report to database (report still generated locally):', reportError)
+          // Report is already generated and displayed, so we just log the error
+        }
       } catch (error) {
-        console.error('Error saving patient/study data:', error)
-        setIsLoading(false)
-        // Still show the images even if saving fails
+        console.error('Error saving patient/study data (report still generated):', error)
+        // Report is already generated and displayed, so we just log the error
       }
     }, 500)
   }
