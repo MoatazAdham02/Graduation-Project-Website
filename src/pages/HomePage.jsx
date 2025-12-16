@@ -409,19 +409,7 @@ const HomePage = () => {
       >
         <div className="container">
           <div className="about-content">
-            <div className={`about-visual ${isVisible.about ? 'slide-in-left' : ''}`}>
-              <div className={`about-card ${isVisible.about ? 'scale-in' : ''}`} style={{ animationDelay: '0.2s' }}>
-                <FiAward />
-                <h4>Industry Leading</h4>
-                <p>Trusted by top medical institutions</p>
-              </div>
-              <div className={`about-card ${isVisible.about ? 'scale-in' : ''}`} style={{ animationDelay: '0.4s' }}>
-                <FiClock />
-                <h4>24/7 Support</h4>
-                <p>Always here when you need us</p>
-              </div>
-            </div>
-            <div className={`about-text ${isVisible.about ? 'slide-in-right' : ''}`}>
+            <div className={`about-text ${isVisible.about ? 'slide-in-left' : ''}`}>
               <span className="section-badge">About Us</span>
               <h2>Our Purpose</h2>
               <p>
@@ -435,6 +423,18 @@ const HomePage = () => {
                 That's why we've built a system that combines cutting-edge technology with intuitive design, 
                 making it easier for medical professionals to focus on what matters most - patient health.
               </p>
+            </div>
+            <div className={`about-visual ${isVisible.about ? 'slide-in-right' : ''}`}>
+              <div className={`about-card ${isVisible.about ? 'scale-in' : ''}`} style={{ animationDelay: '0.2s' }}>
+                <FiAward />
+                <h4>Industry Leading</h4>
+                <p>Trusted by top medical institutions</p>
+              </div>
+              <div className={`about-card ${isVisible.about ? 'scale-in' : ''}`} style={{ animationDelay: '0.4s' }}>
+                <FiClock />
+                <h4>24/7 Support</h4>
+                <p>Always here when you need us</p>
+              </div>
             </div>
           </div>
         </div>
