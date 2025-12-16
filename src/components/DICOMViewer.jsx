@@ -49,8 +49,8 @@ const DICOMViewer = () => {
   const [imageFilters, setImageFilters] = useState({
     invert: false,
     sharpen: false,
-    contrast: 1,
-    brightness: 0
+    contrast: 1.2,
+    brightness: 10
   })
   const [showMetadata, setShowMetadata] = useState(false)
   const [showThumbnails, setShowThumbnails] = useState(true)
@@ -309,16 +309,43 @@ const DICOMViewer = () => {
         canvas.width = parsed.width || 512
         canvas.height = parsed.height || 512
         
-        // Render the actual DICOM image to canvas
+        // Render the actual DICOM image to canvas with better defaults for visibility
         renderDICOMToCanvas(canvas, parsed, {
           window: parsed.windowWidth || 400,
           level: parsed.windowCenter || 50
         })
         
+        // Apply default contrast/brightness to preview for immediate visibility
+        const ctx = canvas.getContext('2d')
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const pixels = imageData.data
+        
+        // Apply brightness
+        for (let j = 0; j < pixels.length; j += 4) {
+          pixels[j] = Math.max(0, Math.min(255, pixels[j] + 10))     // R
+          pixels[j + 1] = Math.max(0, Math.min(255, pixels[j + 1] + 10)) // G
+          pixels[j + 2] = Math.max(0, Math.min(255, pixels[j + 2] + 10)) // B
+        }
+        
+        // Apply contrast
+        const contrastFactor = (259 * (1.2 * 255 + 255)) / (255 * (259 - 1.2 * 255))
+        for (let j = 0; j < pixels.length; j += 4) {
+          pixels[j] = Math.max(0, Math.min(255, contrastFactor * (pixels[j] - 128) + 128))
+          pixels[j + 1] = Math.max(0, Math.min(255, contrastFactor * (pixels[j + 1] - 128) + 128))
+          pixels[j + 2] = Math.max(0, Math.min(255, contrastFactor * (pixels[j + 2] - 128) + 128))
+        }
+        
+        ctx.putImageData(imageData, 0, 0)
+        
         const previewUrl = canvas.toDataURL()
         previews.push(previewUrl)
+        // Update state immediately so preview shows right away
         setFilePreviews([...previews])
         setDicomData([...parsedData])
+        // Force immediate render by updating current file index if this is the first file
+        if (i === 0) {
+          setCurrentFileIndex(0)
+        }
         
         // Note: Saving to localStorage is handled by the useEffect hook above
         // We don't save here to avoid blocking the UI during upload
@@ -735,8 +762,41 @@ const DICOMViewer = () => {
       const currentPreview = filePreviews[currentFileIndex]
       const currentDicom = dicomData[currentFileIndex]
       
-      if (currentDicom && currentDicom.pixelData) {
-        // Render the actual DICOM image if pixelData is available
+      // Priority: Show preview immediately if available (fastest)
+      if (currentPreview) {
+        const img = new Image()
+        img.onload = () => {
+          const ctx = canvas.getContext('2d')
+          canvas.width = img.width
+          canvas.height = img.height
+          ctx.drawImage(img, 0, 0)
+          
+          // Apply filters immediately
+          if (imageFilters.invert || imageFilters.contrast !== 1 || imageFilters.brightness !== 0) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            const filteredData = applyFilters(imageData)
+            ctx.putImageData(filteredData, 0, 0)
+          }
+        }
+        img.onerror = () => {
+          // If preview fails, try to render from DICOM data
+          if (currentDicom && currentDicom.pixelData) {
+            try {
+              renderDICOMToCanvas(canvas, currentDicom, windowLevel)
+              if (imageFilters.invert || imageFilters.contrast !== 1 || imageFilters.brightness !== 0) {
+                const ctx = canvas.getContext('2d')
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                const filteredData = applyFilters(imageData)
+                ctx.putImageData(filteredData, 0, 0)
+              }
+            } catch (error) {
+              console.error('Error rendering DICOM:', error)
+            }
+          }
+        }
+        img.src = currentPreview
+      } else if (currentDicom && currentDicom.pixelData) {
+        // Fallback: Render from DICOM pixelData if preview not available
         try {
           renderDICOMToCanvas(canvas, currentDicom, windowLevel)
           
@@ -749,69 +809,19 @@ const DICOMViewer = () => {
           }
         } catch (error) {
           console.error('Error rendering DICOM:', error)
-          // Fallback to preview image
-          if (currentPreview) {
-            const img = new Image()
-            img.onload = () => {
-              const ctx = canvas.getContext('2d')
-              canvas.width = img.width
-              canvas.height = img.height
-              ctx.drawImage(img, 0, 0)
-              
-              // Apply filters
-              if (imageFilters.invert || imageFilters.contrast !== 1 || imageFilters.brightness !== 0) {
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-                const filteredData = applyFilters(imageData)
-                ctx.putImageData(filteredData, 0, 0)
-              }
-            }
-            img.src = currentPreview
-          }
         }
-      } else if (currentPreview) {
-        // Use the saved preview image (faster, no lag)
-        const img = new Image()
-        img.onload = () => {
-          const ctx = canvas.getContext('2d')
-          canvas.width = img.width
-          canvas.height = img.height
-          ctx.drawImage(img, 0, 0)
-          
-          // Apply filters
-          if (imageFilters.invert || imageFilters.contrast !== 1 || imageFilters.brightness !== 0) {
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-            const filteredData = applyFilters(imageData)
-            ctx.putImageData(filteredData, 0, 0)
-          }
-        }
-        img.onerror = () => {
-          const ctx = canvas.getContext('2d')
-          canvas.width = 512
-          canvas.height = 512
-          ctx.fillStyle = '#000'
-          ctx.fillRect(0, 0, canvas.width, canvas.height)
-          ctx.fillStyle = '#fff'
-          ctx.font = '14px Arial'
-          ctx.textAlign = 'center'
-          ctx.fillText('Error loading preview', canvas.width / 2, canvas.height / 2)
-        }
-        img.src = currentPreview
       } else {
-        // Show placeholder
+        // Show placeholder only if nothing is available
         const ctx = canvas.getContext('2d')
         canvas.width = 512
         canvas.height = 512
-        ctx.fillStyle = '#000'
+        ctx.fillStyle = 'transparent'
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         ctx.fillStyle = '#fff'
         ctx.font = '16px Arial'
         ctx.textAlign = 'center'
-        ctx.fillText('DICOM File Loaded', canvas.width / 2, canvas.height / 2 - 20)
-        ctx.font = '12px Arial'
-        ctx.fillText('Parsing...', canvas.width / 2, canvas.height / 2 + 20)
+        ctx.fillText('Loading DICOM...', canvas.width / 2, canvas.height / 2)
       }
-      
-      // Measurements are drawn via overlay div (handled separately)
     }
   }, [currentFileIndex, windowLevel, dicomData, filePreviews, imageFilters, applyFilters])
 
@@ -1256,263 +1266,251 @@ const DICOMViewer = () => {
                 </div>
               )}
 
-              <div className="image-controls-panel">
-                <div className="control-group">
-                  <label>Zoom: {Math.round(zoom * 100)}%</label>
-                  <div className="zoom-controls">
-                    <button onClick={() => handleZoom(-0.1)}><FiZoomOut /></button>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="5"
-                      step="0.1"
-                      value={zoom}
-                      onChange={(e) => setZoom(parseFloat(e.target.value))}
-                    />
-                    <button onClick={() => handleZoom(0.1)}><FiZoomIn /></button>
-                  </div>
-                </div>
-
-                {/* Image Filters */}
-                <div className="control-group filters-group">
-                  <label>Filters:</label>
-                  <div className="filter-controls">
-                    <label className="filter-label">
-                      <input
-                        type="checkbox"
-                        checked={imageFilters.invert}
-                        onChange={(e) => setImageFilters(prev => ({ ...prev, invert: e.target.checked }))}
-                      />
-                      Invert
-                    </label>
-                    <div className="filter-slider">
-                      <label>Contrast: {imageFilters.contrast.toFixed(1)}</label>
+              <div className="image-display-wrapper">
+                <div className="image-container-wrapper">
+                  {/* Tools Panel - Moved into image container area */}
+                  <div className="image-controls-panel-compact">
+                    <div className="control-group">
+                      <label>Zoom: {Math.round(zoom * 100)}%</label>
                       <div className="zoom-controls">
-                        <button onClick={() => setImageFilters(prev => ({ ...prev, contrast: Math.max(0.5, prev.contrast - 0.1) }))}><FiZoomOut /></button>
+                        <button onClick={() => handleZoom(-0.1)}><FiZoomOut /></button>
                         <input
                           type="range"
                           min="0.5"
-                          max="2"
+                          max="5"
                           step="0.1"
-                          value={imageFilters.contrast}
-                          onChange={(e) => setImageFilters(prev => ({ ...prev, contrast: parseFloat(e.target.value) }))}
+                          value={zoom}
+                          onChange={(e) => setZoom(parseFloat(e.target.value))}
                         />
-                        <button onClick={() => setImageFilters(prev => ({ ...prev, contrast: Math.min(2, prev.contrast + 0.1) }))}><FiZoomIn /></button>
+                        <button onClick={() => handleZoom(0.1)}><FiZoomIn /></button>
                       </div>
                     </div>
-                    <div className="filter-slider">
-                      <label>Brightness: {imageFilters.brightness}</label>
-                      <div className="zoom-controls">
-                        <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.max(-50, prev.brightness - 1) }))}><FiZoomOut /></button>
-                        <input
-                          type="range"
-                          min="-50"
-                          max="50"
-                          step="1"
-                          value={imageFilters.brightness}
-                          onChange={(e) => setImageFilters(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
-                        />
-                        <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.min(50, prev.brightness + 1) }))}><FiZoomIn /></button>
+
+                    {/* Image Filters */}
+                    <div className="control-group filters-group">
+                      <label>Filters:</label>
+                      <div className="filter-controls">
+                        <label className="filter-label">
+                          <input
+                            type="checkbox"
+                            checked={imageFilters.invert}
+                            onChange={(e) => setImageFilters(prev => ({ ...prev, invert: e.target.checked }))}
+                          />
+                          Invert
+                        </label>
+                        <div className="filter-slider">
+                          <label>Brightness: {imageFilters.brightness}</label>
+                          <div className="zoom-controls">
+                            <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.max(-50, prev.brightness - 1) }))}><FiZoomOut /></button>
+                            <input
+                              type="range"
+                              min="-50"
+                              max="50"
+                              step="1"
+                              value={imageFilters.brightness}
+                              onChange={(e) => setImageFilters(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
+                            />
+                            <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.min(50, prev.brightness + 1) }))}><FiZoomIn /></button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="image-display-wrapper">
-                <div className="image-container-wrapper">
-                  <div 
-                    className={activeTool === 'annotate' ? 'image-container annotating' : 'image-container'}
-                    ref={imageContainerRef}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    style={{ cursor: activeTool === 'pan' ? (isPanning ? 'grabbing' : 'grab') : activeTool === 'annotate' ? 'crosshair' : 'default' }}
-                  >
-                    {isLoading ? (
-                      <div className="loading-spinner">
-                        <div className="spinner"></div>
-                        <p>Loading DICOM file...</p>
-                      </div>
-                    ) : (
-                      <div className="dicom-display">
-                        {currentFile ? (
-                          <div 
-                            className="image-wrapper"
-                            style={{
-                              transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px) rotate(${rotation}deg)`,
-                              transformOrigin: 'center center'
-                            }}
-                          >
-                          <div style={{ position: 'relative', display: 'inline-block' }}>
-                            <canvas
-                              ref={canvasRef}
-                              className="dicom-canvas"
-                              width={currentDicomData?.width || 512}
-                              height={currentDicomData?.height || 512}
+                  
+                  <div className="image-and-info-container">
+                    <div 
+                      className={activeTool === 'annotate' ? 'image-container annotating' : 'image-container'}
+                      ref={imageContainerRef}
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      onMouseLeave={handleMouseUp}
+                      style={{ cursor: activeTool === 'pan' ? (isPanning ? 'grabbing' : 'grab') : activeTool === 'annotate' ? 'crosshair' : 'default' }}
+                    >
+                      {isLoading ? (
+                        <div className="loading-spinner">
+                          <div className="spinner"></div>
+                          <p>Loading DICOM file...</p>
+                        </div>
+                      ) : (
+                        <div className="dicom-display">
+                          {currentFile ? (
+                            <div 
+                              className="image-wrapper"
                               style={{
-                                maxWidth: '100%',
-                                maxHeight: '600px',
-                                display: 'block'
+                                transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px) rotate(${rotation}deg)`,
+                                transformOrigin: 'center center'
                               }}
-                            />
-                            <AnnotationsOverlay
-                              annotations={annotations}
-                              currentAnnotation={currentAnnotation}
-                              zoom={zoom}
-                              pan={pan}
-                              canvasRef={canvasRef}
-                              activeTool={activeTool}
-                            />
-                            
-                            {!showImageInfo && (
-                              <button 
-                                onClick={() => setShowImageInfo(true)}
-                                className="show-info-btn"
-                                title="Show image info"
-                              >
-                                <FiInfo />
-                              </button>
-                            )}
-                          </div>
-                          {currentDicomData && (
-                            <div className="dicom-info-overlay">
-                              <p>Modality: {currentDicomData.modality || 'Unknown'}</p>
-                              <p>Size: {currentDicomData.width} × {currentDicomData.height}</p>
-                              {currentDicomData.pixelSpacing && (
-                                <p>Pixel Spacing: {currentDicomData.pixelSpacing}</p>
+                            >
+                              <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <canvas
+                                  ref={canvasRef}
+                                  className="dicom-canvas"
+                                  width={currentDicomData?.width || 512}
+                                  height={currentDicomData?.height || 512}
+                                  style={{
+                                    maxWidth: '100%',
+                                    maxHeight: 'calc(100vh - 300px)',
+                                    display: 'block'
+                                  }}
+                                />
+                                <AnnotationsOverlay
+                                  annotations={annotations}
+                                  currentAnnotation={currentAnnotation}
+                                  zoom={zoom}
+                                  pan={pan}
+                                  canvasRef={canvasRef}
+                                  activeTool={activeTool}
+                                />
+                                
+                                {!showImageInfo && (
+                                  <button 
+                                    onClick={() => setShowImageInfo(true)}
+                                    className="show-info-btn"
+                                    title="Show image info"
+                                  >
+                                    <FiInfo />
+                                  </button>
+                                )}
+                              </div>
+                              {currentDicomData && (
+                                <div className="dicom-info-overlay">
+                                  <p>Modality: {currentDicomData.modality || 'Unknown'}</p>
+                                  <p>Size: {currentDicomData.width} × {currentDicomData.height}</p>
+                                  {currentDicomData.pixelSpacing && (
+                                    <p>Pixel Spacing: {currentDicomData.pixelSpacing}</p>
+                                  )}
+                                  {activeTool === 'annotate' && (
+                                    <p className="tool-hint">
+                                      {annotationType === 'freehand' ? 'Draw freehand' : 
+                                       annotationType === 'arrow' ? 'Click and drag to draw arrow' :
+                                       annotationType === 'line' ? 'Click and drag to draw line' :
+                                       annotationType === 'rectangle' ? 'Click and drag to draw rectangle' :
+                                       annotationType === 'circle' ? 'Click and drag to draw circle' : 'Annotate'}
+                                    </p>
+                                  )}
+                                </div>
                               )}
-                              {activeTool === 'annotate' && (
-                                <p className="tool-hint">
-                                  {annotationType === 'freehand' ? 'Draw freehand' : 
-                                   annotationType === 'arrow' ? 'Click and drag to draw arrow' :
-                                   annotationType === 'line' ? 'Click and drag to draw line' :
-                                   annotationType === 'rectangle' ? 'Click and drag to draw rectangle' :
-                                   annotationType === 'circle' ? 'Click and drag to draw circle' : 'Annotate'}
-                                </p>
-                              )}
+                            </div>
+                          ) : (
+                            <div className="no-preview">
+                              <p>No file selected</p>
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <div className="no-preview">
-                          <p>No file selected</p>
-                        </div>
                       )}
                     </div>
-                  )}
-                </div>
 
-                {/* Image Information Panel - Beside the image */}
-                {showImageInfo && filePreviews.length > 0 && (
-                  <div className="image-info-panel">
-                    <div className="info-item">
-                      <span className="info-label">Slice:</span>
-                      <span className="info-value">{currentFileIndex + 1} / {filePreviews.length}</span>
-                    </div>
-                    {currentDicomData && (
-                      <>
-                        {currentDicomData.modality && (
-                          <div className="info-item">
-                            <span className="info-label">Modality:</span>
-                            <span className="info-value">{currentDicomData.modality}</span>
-                          </div>
+                    {/* Image Information Panel - Right side of image (outside the image container) */}
+                    {showImageInfo && filePreviews.length > 0 && (
+                      <div className="image-info-panel">
+                        <div className="info-item">
+                          <span className="info-label">Slice:</span>
+                          <span className="info-value">{currentFileIndex + 1} / {filePreviews.length}</span>
+                        </div>
+                        {currentDicomData && (
+                          <>
+                            {currentDicomData.modality && (
+                              <div className="info-item">
+                                <span className="info-label">Modality:</span>
+                                <span className="info-value">{currentDicomData.modality}</span>
+                              </div>
+                            )}
+                            <div className="info-item">
+                              <span className="info-label">Size:</span>
+                              <span className="info-value">{currentDicomData.width} × {currentDicomData.height}</span>
+                            </div>
+                            <div className="info-item">
+                              <span className="info-label">Zoom:</span>
+                              <span className="info-value">{Math.round(zoom * 100)}%</span>
+                            </div>
+                          </>
                         )}
-                        <div className="info-item">
-                          <span className="info-label">Size:</span>
-                          <span className="info-value">{currentDicomData.width} × {currentDicomData.height}</span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Zoom:</span>
-                          <span className="info-value">{Math.round(zoom * 100)}%</span>
-                        </div>
-                      </>
+                        <button 
+                          onClick={() => setShowImageInfo(false)}
+                          className="close-info-btn"
+                          title="Hide info"
+                        >
+                          <FiX size={14} />
+                        </button>
+                      </div>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Slice Scroller - Loops through all DICOM slices */}
+              {filePreviews.length > 0 && (
+                <div className="slice-scroller-container">
+                  <div className="slice-scroller-header">
+                    <h4>Slice Navigator</h4>
+                    <span className="slice-counter">
+                      Slice {currentFileIndex + 1} of {filePreviews.length}
+                    </span>
+                  </div>
+                  <div className="thumbnail-strip">
                     <button 
-                      onClick={() => setShowImageInfo(false)}
-                      className="close-info-btn"
-                      title="Hide info"
+                      className="thumbnail-nav-btn"
+                      onClick={() => {
+                        if (thumbnailStripRef.current) {
+                          thumbnailStripRef.current.scrollBy({
+                            left: -200,
+                            behavior: 'smooth'
+                          })
+                        }
+                      }}
+                      aria-label="Scroll left"
                     >
-                      <FiX size={14} />
+                      <FiChevronLeft />
+                    </button>
+                    <div 
+                      ref={thumbnailStripRef}
+                      className="thumbnail-strip-content"
+                      onWheel={(e) => {
+                        // Allow horizontal scrolling with mouse wheel
+                        if (e.shiftKey || e.deltaY !== 0) {
+                          e.preventDefault()
+                          if (thumbnailStripRef.current) {
+                            thumbnailStripRef.current.scrollLeft += e.deltaY
+                          }
+                        }
+                      }}
+                    >
+                      {filePreviews.map((preview, idx) => (
+                        <div
+                          key={idx}
+                          className={`thumbnail-item ${idx === currentFileIndex ? 'active' : ''}`}
+                          onClick={() => setCurrentFileIndex(idx)}
+                          title={`Slice ${idx + 1}`}
+                        >
+                          <img src={preview} alt={`Slice ${idx + 1}`} />
+                          <span className="thumbnail-number">{idx + 1}</span>
+                          {idx === currentFileIndex && (
+                            <div className="thumbnail-active-indicator" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <button 
+                      className="thumbnail-nav-btn"
+                      onClick={() => {
+                        if (thumbnailStripRef.current) {
+                          thumbnailStripRef.current.scrollBy({
+                            left: 200,
+                            behavior: 'smooth'
+                          })
+                        }
+                      }}
+                      aria-label="Scroll right"
+                    >
+                      <FiChevronRight />
                     </button>
                   </div>
-                )}
-              </div>
-
-                {/* Slice Scroller - Loops through all DICOM slices */}
-                {filePreviews.length > 0 && (
-                  <div className="slice-scroller-container">
-                    <div className="slice-scroller-header">
-                      <h4>Slice Navigator</h4>
-                      <span className="slice-counter">
-                        Slice {currentFileIndex + 1} of {filePreviews.length}
-                      </span>
-                    </div>
-                    <div className="thumbnail-strip">
-                      <button 
-                        className="thumbnail-nav-btn"
-                        onClick={() => {
-                          if (thumbnailStripRef.current) {
-                            thumbnailStripRef.current.scrollBy({
-                              left: -200,
-                              behavior: 'smooth'
-                            })
-                          }
-                        }}
-                        aria-label="Scroll left"
-                      >
-                        <FiChevronLeft />
-                      </button>
-                      <div 
-                        ref={thumbnailStripRef}
-                        className="thumbnail-strip-content"
-                        onWheel={(e) => {
-                          // Allow horizontal scrolling with mouse wheel
-                          if (e.shiftKey || e.deltaY !== 0) {
-                            e.preventDefault()
-                            if (thumbnailStripRef.current) {
-                              thumbnailStripRef.current.scrollLeft += e.deltaY
-                            }
-                          }
-                        }}
-                      >
-                        {filePreviews.map((preview, idx) => (
-                          <div
-                            key={idx}
-                            className={`thumbnail-item ${idx === currentFileIndex ? 'active' : ''}`}
-                            onClick={() => setCurrentFileIndex(idx)}
-                            title={`Slice ${idx + 1}`}
-                          >
-                            <img src={preview} alt={`Slice ${idx + 1}`} />
-                            <span className="thumbnail-number">{idx + 1}</span>
-                            {idx === currentFileIndex && (
-                              <div className="thumbnail-active-indicator" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <button 
-                        className="thumbnail-nav-btn"
-                        onClick={() => {
-                          if (thumbnailStripRef.current) {
-                            thumbnailStripRef.current.scrollBy({
-                              left: 200,
-                              behavior: 'smooth'
-                            })
-                          }
-                        }}
-                        aria-label="Scroll right"
-                      >
-                        <FiChevronRight />
-                      </button>
-                    </div>
-                    <div className="slice-scroller-hint">
-                      <span>💡 Scroll horizontally or use arrow buttons to navigate through all slices</span>
-                    </div>
+                  <div className="slice-scroller-hint">
+                    <span>💡 Scroll horizontally or use arrow buttons to navigate through all slices</span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Annotations Panel */}
               {annotations.filter(a => a.sliceIndex === currentFileIndex).length > 0 && (

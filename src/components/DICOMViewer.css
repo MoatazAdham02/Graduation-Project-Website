@@ -289,25 +289,35 @@ section h2::before {
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  position: relative;
 }
 
 .image-container-wrapper {
   position: relative;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-and-info-container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
 
 .image-container {
-  background: #1a202c;
+  background: transparent;
   border-radius: 12px;
-  overflow: hidden;
-  min-height: 500px;
-  max-height: 600px;
-  height: auto;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   user-select: none;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 8px;
 }
 
 /* Improve crosshair precision - use a smaller, more visible cursor */
@@ -361,11 +371,14 @@ section h2::before {
 .dicom-image,
 .dicom-canvas {
   max-width: 100%;
-  max-height: 100%;
-  height: 100%;
+  max-height: calc(100vh - 300px);
   width: auto;
+  height: auto;
   object-fit: contain;
-  background: #000;
+  background: transparent;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .dicom-info-overlay {
@@ -767,6 +780,17 @@ section h2::before {
   border-radius: 8px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+.image-controls-panel-compact {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
 }
 
 .control-group {
@@ -1593,19 +1617,23 @@ section h2::before {
   transform: translateY(-1px);
 }
 
-/* Image Info Panel - Beside the image */
+/* Image Info Panel - Right side of image (outside the image container) */
 .image-info-panel {
-  background: rgba(0, 180, 216, 0.95);
+  background: rgba(18, 24, 38, 0.95);
   backdrop-filter: blur(10px);
-  color: white;
+  color: var(--text-primary);
   padding: 16px;
   border-radius: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 180, 216, 0.3);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   min-width: 200px;
   max-width: 250px;
   font-size: 13px;
   position: relative;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0;
+  height: fit-content;
 }
 
 .image-info-panel .info-item {
@@ -1629,28 +1657,30 @@ section h2::before {
 .image-info-panel .info-value {
   font-weight: 700;
   font-size: 13px;
-  color: white;
+  color: var(--primary);
 }
 
 .image-info-panel .close-info-btn {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: white;
+  color: var(--text-primary);
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .image-info-panel .close-info-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* Image Info Overlay - Keep for backward compatibility if needed */
