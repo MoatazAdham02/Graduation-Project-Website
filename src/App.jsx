@@ -11,6 +11,7 @@ import PatientManagement from './pages/PatientManagement'
 import Reports from './pages/Reports'
 import Analytics from './pages/Analytics'
 import About from './pages/About'
+import HomePage from './pages/HomePage'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
@@ -66,7 +67,8 @@ function App() {
           <NotificationProvider>
             <Router>
               <Routes>
-                <Route path="/" element={<HeartIntro />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/intro" element={<HeartIntro />} />
                 <Route path="/auth-landing" element={<AuthLanding />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
