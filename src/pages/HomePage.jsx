@@ -11,6 +11,9 @@ const HomePage = () => {
   const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState({})
   const [stats, setStats] = useState({ patients: 0, studies: 0, reports: 0 })
+  const [activeSection, setActiveSection] = useState('')
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const sectionsRef = useRef({})
 
   useEffect(() => {
@@ -26,6 +29,7 @@ const HomePage = () => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           setIsVisible(prev => ({ ...prev, [entry.target.id]: true }))
+          setActiveSection(entry.target.id)
         }
       })
     }, observerOptions)
@@ -36,6 +40,38 @@ const HomePage = () => {
 
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      const offset = 80 // Account for sticky navbar
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
+      setIsMobileMenuOpen(false)
+    }
+  }
+
+  const navLinks = [
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About' },
+    { id: 'serve', label: 'Who We Serve' },
+    { id: 'security', label: 'Security' },
+    { id: 'cta', label: 'Get Started' }
+  ]
 
   useEffect(() => {
     if (isVisible.stats) {
@@ -93,12 +129,23 @@ const HomePage = () => {
       </div>
 
       {/* Navigation Bar */}
-      <nav className="homepage-nav">
+      <nav className={`homepage-nav ${isScrolled ? 'scrolled' : ''}`}>
         <div className="container">
           <div className="nav-content">
-            <div className="nav-brand">
+            <div className="nav-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <h2>Plaqio</h2>
               <span className="nav-tagline">Detect. Analyze. Monitor</span>
+            </div>
+            <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+              {navLinks.map(link => (
+                <button
+                  key={link.id}
+                  className={`nav-link ${activeSection === link.id ? 'active' : ''}`}
+                  onClick={() => scrollToSection(link.id)}
+                >
+                  {link.label}
+                </button>
+              ))}
             </div>
             <div className="nav-actions">
               <button 
@@ -112,6 +159,17 @@ const HomePage = () => {
                 onClick={() => navigate('/register')}
               >
                 Get Started
+              </button>
+              <button 
+                className="mobile-menu-toggle"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                <span className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </span>
               </button>
             </div>
           </div>
