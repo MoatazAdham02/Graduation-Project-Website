@@ -136,41 +136,43 @@ const HomePage = () => {
               <h2>Plaqio</h2>
               <span className="nav-tagline">Detect. Analyze. Monitor</span>
             </div>
-            <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-              {navLinks.map(link => (
-                <button
-                  key={link.id}
-                  className={`nav-link ${activeSection === link.id ? 'active' : ''}`}
-                  onClick={() => scrollToSection(link.id)}
+            <div className="nav-right-group">
+              <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+                {navLinks.map(link => (
+                  <button
+                    key={link.id}
+                    className={`nav-link ${activeSection === link.id ? 'active' : ''}`}
+                    onClick={() => scrollToSection(link.id)}
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+              <div className="nav-actions">
+                <button 
+                  className="nav-btn nav-btn-secondary"
+                  onClick={() => navigate('/login')}
                 >
-                  {link.label}
+                  Sign In
                 </button>
-              ))}
-            </div>
-            <div className="nav-actions">
-              <button 
-                className="nav-btn nav-btn-secondary"
-                onClick={() => navigate('/login')}
-              >
-                Sign In
-              </button>
-              <button 
-                className="nav-btn nav-btn-primary"
-                onClick={() => navigate('/register')}
-              >
-                Get Started
-              </button>
-              <button 
-                className="mobile-menu-toggle"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Toggle menu"
-              >
-                <span className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-              </button>
+                <button 
+                  className="nav-btn nav-btn-primary"
+                  onClick={() => navigate('/register')}
+                >
+                  Get Started
+                </button>
+                <button 
+                  className="mobile-menu-toggle"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle menu"
+                >
+                  <span className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
