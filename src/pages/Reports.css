@@ -142,6 +142,15 @@
   color: white;
 }
 
+.report-actions button.delete-button {
+  color: #dc3545;
+}
+
+.report-actions button.delete-button:hover {
+  background: #dc3545;
+  color: white;
+}
+
 .report-card-details {
   display: grid;
   grid-template-columns: 1fr 1fr;

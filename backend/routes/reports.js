@@ -22,8 +22,8 @@ router.get('/', protect, async (req, res) => {
     }
 
     const reports = await Report.find(query)
-      .populate('patientId', 'name patientId')
-      .populate('studyId', 'studyId modality studyDate')
+      .populate('patientId', 'name patientId dateOfBirth gender email')
+      .populate('studyId', 'studyId modality studyDate studyTime description bodyPart institutionName studyInstanceUID')
       .populate('createdBy', 'firstName lastName email')
       .sort({ reportDate: -1 });
 

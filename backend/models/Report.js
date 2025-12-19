@@ -4,12 +4,54 @@ const reportSchema = new mongoose.Schema({
   studyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Study',
-    required: [true, 'Study ID is required']
+    required: false // Make optional so reports can be created even without study
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Patient',
-    required: [true, 'Patient ID is required']
+    required: false // Make optional so reports can be created even without patient
+  },
+  patientName: {
+    type: String,
+    trim: true
+  },
+  patientDateOfBirth: {
+    type: Date
+  },
+  patientGender: {
+    type: String,
+    trim: true
+  },
+  patientAge: {
+    type: String,
+    trim: true
+  },
+  studyDate: {
+    type: Date
+  },
+  studyTime: {
+    type: String,
+    trim: true
+  },
+  modality: {
+    type: String,
+    trim: true
+  },
+  studyDescription: {
+    type: String,
+    trim: true
+  },
+  bodyPartExamined: {
+    type: String,
+    trim: true
+  },
+  institutionName: {
+    type: String,
+    trim: true
+  },
+  studyInstanceUID: {
+    type: String,
+    trim: true
   },
   reportId: {
     type: String,

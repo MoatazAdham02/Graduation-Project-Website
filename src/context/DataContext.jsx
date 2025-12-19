@@ -34,11 +34,27 @@ export const DataProvider = ({ children }) => {
   const loadAllData = async () => {
     setLoading(true)
     try {
+      console.log('Loading all data from API...')
       const [patientsData, studiesData, reportsData] = await Promise.all([
-        patientsAPI.getAll().catch(() => []),
-        studiesAPI.getAll().catch(() => []),
-        reportsAPI.getAll().catch(() => [])
+        patientsAPI.getAll().catch((err) => {
+          console.error('Error loading patients:', err)
+          return []
+        }),
+        studiesAPI.getAll().catch((err) => {
+          console.error('Error loading studies:', err)
+          return []
+        }),
+        reportsAPI.getAll().catch((err) => {
+          console.error('Error loading reports:', err)
+          return []
+        })
       ])
+      
+      console.log('Loaded data:', {
+        patients: patientsData?.length || 0,
+        studies: studiesData?.length || 0,
+        reports: reportsData?.length || 0
+      })
       
       // Deduplicate patients by patientId before setting state
       const uniquePatients = []
@@ -64,6 +80,12 @@ export const DataProvider = ({ children }) => {
       setPatients(uniquePatients)
       setStudies(studiesData || [])
       setReports(reportsData || [])
+      
+      console.log('State updated:', {
+        patients: uniquePatients.length,
+        studies: (studiesData || []).length,
+        reports: (reportsData || []).length
+      })
     } catch (error) {
       console.error('Failed to load data:', error)
     } finally {

@@ -5,10 +5,10 @@ import Navigation from '../components/Navigation'
 import { format } from 'date-fns'
 import { PDFDocument, rgb } from 'pdf-lib'
 import './Reports.css'
-import { FiEdit, FiDownload, FiPrinter, FiFileText, FiSearch, FiFilter, FiSave } from 'react-icons/fi'
+import { FiEdit, FiDownload, FiPrinter, FiFileText, FiSearch, FiFilter, FiSave, FiTrash2 } from 'react-icons/fi'
 
 const Reports = () => {
-  const { reports, studies, updateReport } = useData()
+  const { reports, studies, updateReport, deleteReport } = useData()
   const { user } = useAuth()
   const [selectedReport, setSelectedReport] = useState(null)
   const [editingReport, setEditingReport] = useState(null)
@@ -90,8 +90,25 @@ const Reports = () => {
       // Patient Info
       const patientName = getPatientName(report)
       const patientId = getPatientId(report.patientId)
+      const patientDOB = report.patientDateOfBirth || (typeof report.patientId === 'object' && report.patientId?.dateOfBirth) || 'N/A'
+      const patientGender = report.patientGender || (typeof report.patientId === 'object' && report.patientId?.gender) || 'N/A'
+      const patientAge = report.patientAge || (typeof report.patientId === 'object' && report.patientId?.age) || 'N/A'
+      const studyDate = report.studyDate || (typeof report.studyId === 'object' && report.studyId?.studyDate) || 'N/A'
+      const modality = report.modality || (typeof report.studyId === 'object' && report.studyId?.modality) || 'N/A'
+      const studyDescription = report.studyDescription || (typeof report.studyId === 'object' && report.studyId?.description) || 'N/A'
+      const bodyPart = report.bodyPartExamined || (typeof report.studyId === 'object' && report.studyId?.bodyPart) || 'N/A'
+      const institution = report.institutionName || (typeof report.studyId === 'object' && report.studyId?.institutionName) || 'N/A'
       
-      page.drawText(`Patient: ${patientName}`, {
+      page.drawText('Patient Information', {
+        x: 50,
+        y,
+        size: 14,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      })
+      y -= 25
+
+      page.drawText(`Patient Name: ${patientName}`, {
         x: 50,
         y,
         size: 12,
@@ -109,14 +126,98 @@ const Reports = () => {
       })
       y -= 20
 
-      page.drawText(`Study Date: ${report.studyDate}`, {
+      page.drawText(`Date of Birth: ${patientDOB}`, {
         x: 50,
         y,
         size: 12,
         font,
         color: rgb(0, 0, 0),
       })
-      y -= 30
+      y -= 20
+
+      page.drawText(`Gender: ${patientGender}`, {
+        x: 50,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0),
+      })
+      y -= 20
+
+      if (patientAge !== 'N/A') {
+        page.drawText(`Age: ${patientAge}`, {
+          x: 50,
+          y,
+          size: 12,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        y -= 20
+      }
+
+      y -= 10
+
+      page.drawText('Study Information', {
+        x: 50,
+        y,
+        size: 14,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      })
+      y -= 25
+
+      page.drawText(`Study Date: ${studyDate}`, {
+        x: 50,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0),
+      })
+      y -= 20
+
+      page.drawText(`Modality: ${modality}`, {
+        x: 50,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0),
+      })
+      y -= 20
+
+      if (studyDescription !== 'N/A') {
+        page.drawText(`Study Description: ${studyDescription}`, {
+          x: 50,
+          y,
+          size: 12,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        y -= 20
+      }
+
+      if (bodyPart !== 'N/A') {
+        page.drawText(`Body Part Examined: ${bodyPart}`, {
+          x: 50,
+          y,
+          size: 12,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        y -= 20
+      }
+
+      if (institution !== 'N/A') {
+        page.drawText(`Institution: ${institution}`, {
+          x: 50,
+          y,
+          size: 12,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        y -= 20
+      }
+
+      y -= 10
 
       // Findings
       page.drawText('Findings:', {
@@ -165,7 +266,8 @@ const Reports = () => {
       y -= 20
 
       // Physician
-      page.drawText(`Physician: ${report.physicianName || report.physician || 'N/A'}`, {
+      const physicianName = report.physicianName || report.physician || (user ? `Dr. ${user.firstName} ${user.lastName}, MD` : 'N/A')
+      page.drawText(`Physician: ${physicianName}`, {
         x: 50,
         y,
         size: 12,
@@ -196,18 +298,64 @@ const Reports = () => {
     }
   }
 
+  const handleDelete = async (report) => {
+    const patientName = getPatientName(report)
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the report for ${patientName}? This action cannot be undone.`
+    )
+    
+    if (confirmDelete) {
+      try {
+        const reportId = report._id || report.id
+        if (reportId) {
+          await deleteReport(reportId)
+          // Close any open modals if the deleted report was selected
+          if (selectedReport && (selectedReport._id === reportId || selectedReport.id === reportId)) {
+            setSelectedReport(null)
+          }
+          if (editingReport && (editingReport._id === reportId || editingReport.id === reportId)) {
+            setEditingReport(null)
+          }
+        } else {
+          alert('Unable to delete report: Report ID not found')
+        }
+      } catch (error) {
+        console.error('Error deleting report:', error)
+        alert('Failed to delete report. Please try again.')
+      }
+    }
+  }
+
   const handlePrint = (report) => {
     const patientName = getPatientName(report)
     const patientId = getPatientId(report.patientId)
     const printWindow = window.open('', '_blank')
+    const patientDOB = report.patientDateOfBirth || (typeof report.patientId === 'object' && report.patientId?.dateOfBirth) || 'N/A'
+    const patientGender = report.patientGender || (typeof report.patientId === 'object' && report.patientId?.gender) || 'N/A'
+    const patientAge = report.patientAge || (typeof report.patientId === 'object' && report.patientId?.age) || 'N/A'
+    const studyDate = report.studyDate || (typeof report.studyId === 'object' && report.studyId?.studyDate) || 'N/A'
+    const modality = report.modality || (typeof report.studyId === 'object' && report.studyId?.modality) || 'N/A'
+    const studyDescription = report.studyDescription || (typeof report.studyId === 'object' && report.studyId?.description) || 'N/A'
+    const bodyPart = report.bodyPartExamined || (typeof report.studyId === 'object' && report.studyId?.bodyPart) || 'N/A'
+    const institution = report.institutionName || (typeof report.studyId === 'object' && report.studyId?.institutionName) || 'N/A'
+
     printWindow.document.write(`
       <html>
         <head><title>Medical Report</title></head>
         <body>
           <h1>Medical Report</h1>
-          <h2>Patient: ${patientName}</h2>
-          <p>Patient ID: ${patientId}</p>
-          <p>Study Date: ${report.studyDate || 'N/A'}</p>
+          <h2>Patient Information</h2>
+          <p><strong>Patient Name:</strong> ${patientName}</p>
+          <p><strong>Patient ID:</strong> ${patientId}</p>
+          <p><strong>Date of Birth:</strong> ${patientDOB}</p>
+          <p><strong>Gender:</strong> ${patientGender}</p>
+          ${patientAge !== 'N/A' ? `<p><strong>Age:</strong> ${patientAge}</p>` : ''}
+          <h2>Study Information</h2>
+          <p><strong>Study Date:</strong> ${studyDate}</p>
+          <p><strong>Modality:</strong> ${modality}</p>
+          ${studyDescription !== 'N/A' ? `<p><strong>Study Description:</strong> ${studyDescription}</p>` : ''}
+          ${bodyPart !== 'N/A' ? `<p><strong>Body Part Examined:</strong> ${bodyPart}</p>` : ''}
+          ${institution !== 'N/A' ? `<p><strong>Institution:</strong> ${institution}</p>` : ''}
           <h3>Findings:</h3>
           <ul>
             ${report.findings?.map(f => `<li>${f.title}: ${f.value}</li>`).join('') || '<li>No findings</li>'}
@@ -216,8 +364,8 @@ const Reports = () => {
           <ul>
             ${report.recommendations?.map(r => `<li>${r}</li>`).join('') || '<li>No recommendations</li>'}
           </ul>
-          <p>Physician: ${report.physicianName || report.physician || 'N/A'}</p>
-          <p>Report Date: ${report.reportDate || 'N/A'}</p>
+          <p><strong>Physician:</strong> ${report.physicianName || report.physician || (user ? `Dr. ${user.firstName} ${user.lastName}, MD` : 'N/A')}</p>
+          <p><strong>Report Date:</strong> ${report.reportDate || 'N/A'}</p>
         </body>
       </html>
     `)
@@ -311,6 +459,16 @@ const Reports = () => {
                       title="Print"
                     >
                       <FiPrinter />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(report)
+                      }} 
+                      title="Delete"
+                      className="delete-button"
+                    >
+                      <FiTrash2 />
                     </button>
                   </div>
                 </div>
@@ -428,15 +586,90 @@ const Reports = () => {
                 <div className="report-section">
                   <h4>Patient Information</h4>
                   <div className="info-grid">
+                    <div><strong>Patient Name:</strong> {getPatientName(selectedReport)}</div>
                     <div><strong>Patient ID:</strong> {getPatientId(selectedReport.patientId)}</div>
-                    <div><strong>Study Date:</strong> {
-                      selectedReport.studyDate 
-                        ? (typeof selectedReport.studyDate === 'string' 
-                            ? selectedReport.studyDate 
-                            : format(new Date(selectedReport.studyDate), 'MMM dd, yyyy'))
-                        : 'N/A'
+                    <div><strong>Date of Birth:</strong> {
+                      (() => {
+                        try {
+                          if (selectedReport.patientDateOfBirth) {
+                            const dob = selectedReport.patientDateOfBirth
+                            return typeof dob === 'string' ? dob : format(new Date(dob), 'MMM dd, yyyy')
+                          }
+                          if (typeof selectedReport.patientId === 'object' && selectedReport.patientId?.dateOfBirth) {
+                            const dob = selectedReport.patientId.dateOfBirth
+                            return typeof dob === 'string' ? dob : format(new Date(dob), 'MMM dd, yyyy')
+                          }
+                          return 'N/A'
+                        } catch (e) {
+                          return 'N/A'
+                        }
+                      })()
                     }</div>
-                    <div><strong>Modality:</strong> {selectedReport.modality || 'N/A'}</div>
+                    <div><strong>Gender:</strong> {
+                      selectedReport.patientGender || 
+                      (typeof selectedReport.patientId === 'object' && selectedReport.patientId?.gender) || 
+                      'N/A'
+                    }</div>
+                    <div><strong>Age:</strong> {
+                      selectedReport.patientAge || 
+                      (typeof selectedReport.patientId === 'object' && selectedReport.patientId?.age) || 
+                      'N/A'
+                    }</div>
+                  </div>
+                </div>
+
+                <div className="report-section">
+                  <h4>Study Information</h4>
+                  <div className="info-grid">
+                    <div><strong>Study Date:</strong> {
+                      (() => {
+                        try {
+                          if (selectedReport.studyDate) {
+                            const sd = selectedReport.studyDate
+                            return typeof sd === 'string' ? sd : format(new Date(sd), 'MMM dd, yyyy')
+                          }
+                          if (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.studyDate) {
+                            const sd = selectedReport.studyId.studyDate
+                            return typeof sd === 'string' ? sd : format(new Date(sd), 'MMM dd, yyyy')
+                          }
+                          return 'N/A'
+                        } catch (e) {
+                          return 'N/A'
+                        }
+                      })()
+                    }</div>
+                    <div><strong>Study Time:</strong> {
+                      selectedReport.studyTime || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.studyTime) || 
+                      'N/A'
+                    }</div>
+                    <div><strong>Modality:</strong> {
+                      selectedReport.modality || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.modality) || 
+                      'N/A'
+                    }</div>
+                    <div><strong>Study Description:</strong> {
+                      selectedReport.studyDescription || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.description) || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.seriesDescription) || 
+                      'N/A'
+                    }</div>
+                    <div><strong>Body Part Examined:</strong> {
+                      selectedReport.bodyPartExamined || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.bodyPart) || 
+                      'N/A'
+                    }</div>
+                    <div><strong>Institution:</strong> {
+                      selectedReport.institutionName || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.institutionName) || 
+                      'N/A'
+                    }</div>
+                    <div><strong>Study Instance UID:</strong> {
+                      selectedReport.studyInstanceUID || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.studyInstanceUID) || 
+                      (typeof selectedReport.studyId === 'object' && selectedReport.studyId?.studyId) || 
+                      'N/A'
+                    }</div>
                   </div>
                 </div>
 
@@ -463,7 +696,11 @@ const Reports = () => {
 
                 <div className="report-footer">
                   <div>
-                    <strong>Physician:</strong> {selectedReport.physicianName || selectedReport.physician || 'N/A'}
+                    <strong>Physician:</strong> {
+                      selectedReport.physicianName || 
+                      selectedReport.physician || 
+                      (user ? `Dr. ${user.firstName} ${user.lastName}, MD` : 'N/A')
+                    }
                   </div>
                   <div>
                     <strong>Report Date:</strong> {format(new Date(selectedReport.createdAt || selectedReport.reportDate || new Date()), 'MMM dd, yyyy')}

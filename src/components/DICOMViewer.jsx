@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useData } from '../context/DataContext'
 import { useNotifications } from '../context/NotificationContext'
+import { useAuth } from '../context/AuthContext'
 import { patientsAPI } from '../services/api'
 import Navigation from './Navigation'
 import ProgressIndicator from './ProgressIndicator'
@@ -19,6 +20,7 @@ import './DICOMViewer.css'
 const DICOMViewer = () => {
   const { addStudy, addReport, addPatient, patients, refreshData } = useData()
   const { notifyStudyComplete, notifyReportReady } = useNotifications()
+  const { user } = useAuth()
   
   const [selectedFiles, setSelectedFiles] = useState([])
   const [currentFileIndex, setCurrentFileIndex] = useState(0)
@@ -405,11 +407,14 @@ const DICOMViewer = () => {
       // Use the same patient name as in the report for consistency
       notifyReportReady(reportData.patientName || 'Unknown Patient')
       
-      // Try to save to database (but don't let failures prevent report generation)
+      // ALWAYS CREATE REPORT - even if patient/study creation fails
+      // This ensures reports are generated for every DICOM upload
+      let patient = null
+      let study = null
+      
+      // Try to create or find patient and study, but don't let failures stop report creation
       try {
         // Create or find patient from DICOM data
-        let patient
-        
         // First, check if patient already exists in local state
         const existingPatient = patients.find(p => {
           const existingId = p.patientId || p._id || p.id
@@ -427,19 +432,14 @@ const DICOMViewer = () => {
             patient = await addPatient({
               name: patientInfo.name,
               patientId: patientInfo.patientId,
-              dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'), // Default if missing
-              gender: patientInfo.gender || 'other', // Default if missing
+              dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
+              gender: patientInfo.gender || 'other',
               status: 'active'
             })
           } catch (error) {
-            // Patient might already exist in database but not in local state
-            // Reload patients to get the latest from database
-            console.log('Patient creation error (might already exist in database):', error)
-            // Patient might already exist in database but not in local state
-            // Try to fetch it directly from the API
+            console.log('Patient creation error, trying to fetch from API:', error)
             if (error.message && error.message.includes('already exists')) {
               try {
-                // Fetch all patients from API to find the existing one
                 const allPatients = await patientsAPI.getAll()
                 const foundPatient = allPatients.find(p => {
                   const existingId = p.patientId || p._id || p.id
@@ -447,73 +447,152 @@ const DICOMViewer = () => {
                 })
                 if (foundPatient) {
                   patient = foundPatient
-                  // Refresh local state to include this patient
                   await refreshData()
-                } else {
-                  throw new Error('Could not find existing patient in database')
                 }
               } catch (fetchError) {
                 console.error('Error fetching patients:', fetchError)
-                throw new Error('Could not find or create patient')
               }
-            } else {
-              throw error
             }
           }
         } else {
           // Fallback if DICOM doesn't have patient info - create with unique ID
           const fallbackId = `PAT-${Date.now()}`
-          patient = await addPatient({
-            name: patientInfo.name || 'Unknown Patient',
-            patientId: fallbackId,
-            dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
-            gender: patientInfo.gender || 'other',
-            status: 'active'
-          })
+          try {
+            patient = await addPatient({
+              name: patientInfo.name || 'Unknown Patient',
+              patientId: fallbackId,
+              dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
+              gender: patientInfo.gender || 'other',
+              status: 'active'
+            })
+          } catch (error) {
+            console.error('Error creating fallback patient:', error)
+          }
         }
         
-        // Create study from DICOM data
-        const study = await addStudy({
-          patientId: patient._id || patient.id,
-          studyId: studyInfo.studyInstanceUID || `STUDY-${Date.now()}`,
-          modality: firstDicomData?.modality || 'CT',
-          studyDate: studyInfo.studyDate || new Date(),
-          description: studyInfo.studyDescription || studyInfo.seriesDescription || 'DICOM Study',
-          bodyPart: studyInfo.bodyPartExamined || '',
-          files: validFiles.map(f => ({
-            fileName: f.name,
-            fileSize: f.size,
-            uploadedAt: new Date()
-          })),
-          dicomData: {
-            width: firstDicomData?.width,
-            height: firstDicomData?.height,
-            pixelSpacing: firstDicomData?.pixelSpacing,
-            sliceThickness: null // Can be extracted if available
+        // Create study from DICOM data (only if we have a patient)
+        if (patient && (patient._id || patient.id)) {
+          try {
+            const studyPayload = {
+              patientId: patient._id || patient.id,
+              studyId: studyInfo.studyInstanceUID || `STUDY-${Date.now()}`,
+              modality: firstDicomData?.modality || 'CT',
+              studyDate: studyInfo.studyDate || new Date(),
+              description: studyInfo.studyDescription || studyInfo.seriesDescription || 'DICOM Study',
+              bodyPart: studyInfo.bodyPartExamined || '',
+              files: validFiles.map(f => ({
+                fileName: f.name,
+                fileSize: f.size,
+                uploadedAt: new Date()
+              })),
+              dicomData: {
+                width: firstDicomData?.width,
+                height: firstDicomData?.height,
+                pixelSpacing: firstDicomData?.pixelSpacing,
+                sliceThickness: null
+              }
+            }
+            
+            if (studyInfo.studyTime) studyPayload.studyTime = studyInfo.studyTime
+            if (studyInfo.studyInstanceUID) studyPayload.studyInstanceUID = studyInfo.studyInstanceUID
+            if (studyInfo.institutionName) studyPayload.institutionName = studyInfo.institutionName
+            
+            study = await addStudy(studyPayload)
+            console.log('Study created successfully:', study)
+          } catch (studyError) {
+            console.error('Error creating study:', studyError)
           }
-        })
-        
-        // Create report in database
-        try {
-          const generatedReport = await addReport({
-            studyId: study._id || study.id,
-            patientId: patient._id || patient.id,
-            reportId: `RPT-${Date.now()}`,
-            findings: reportData.findings || [],
-            recommendations: reportData.recommendations || [],
-            physicianName: reportData.physician || '',
-            physicianTitle: 'MD',
-            reportDate: new Date()
-          })
-          
-          // Report already saved to database successfully
-        } catch (reportError) {
-          console.error('Error saving report to database (report still generated locally):', reportError)
-          // Report is already generated and displayed, so we just log the error
         }
       } catch (error) {
-        console.error('Error saving patient/study data (report still generated):', error)
-        // Report is already generated and displayed, so we just log the error
+        console.error('Error in patient/study creation:', error)
+      }
+      
+      // NOW CREATE THE REPORT - This will ALWAYS run, even if patient/study creation failed
+      try {
+        const physicianName = user ? `Dr. ${user.firstName} ${user.lastName}` : reportData.physician || ''
+        
+        // Prepare report data - use patient/study if available, otherwise use fallbacks
+        const reportPayload = {
+          reportId: `RPT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Ensure unique ID
+          patientName: patient?.name || reportData.patientName || 'Unknown Patient',
+          findings: reportData.findings || [],
+          recommendations: reportData.recommendations || [],
+          physicianName: physicianName,
+          physicianTitle: 'MD',
+          reportDate: new Date()
+        }
+        
+        // Add patient/study IDs if available
+        if (patient && (patient._id || patient.id)) {
+          reportPayload.patientId = patient._id || patient.id
+        }
+        if (study && (study._id || study.id)) {
+          reportPayload.studyId = study._id || study.id
+        }
+        
+        // Add optional patient fields
+        if (patient?.dateOfBirth || patientInfo.dateOfBirth) {
+          reportPayload.patientDateOfBirth = patient.dateOfBirth || patientInfo.dateOfBirth
+        }
+        if (patient?.gender || patientInfo.gender) {
+          reportPayload.patientGender = patient.gender || patientInfo.gender
+        }
+        if (patient?.age || patientInfo.age) {
+          reportPayload.patientAge = patient.age || patientInfo.age
+        }
+        
+        // Add optional study fields
+        if (studyInfo.studyDate || study?.studyDate) {
+          const studyDateValue = studyInfo.studyDate || study.studyDate
+          reportPayload.studyDate = typeof studyDateValue === 'string' ? new Date(studyDateValue) : studyDateValue
+        } else {
+          reportPayload.studyDate = new Date()
+        }
+        
+        if (studyInfo.studyTime || study?.studyTime) {
+          reportPayload.studyTime = studyInfo.studyTime || study.studyTime
+        }
+        
+        reportPayload.modality = firstDicomData?.modality || study?.modality || 'CT'
+        
+        if (studyInfo.studyDescription || studyInfo.seriesDescription || study?.description) {
+          reportPayload.studyDescription = studyInfo.studyDescription || studyInfo.seriesDescription || study.description
+        }
+        
+        if (studyInfo.bodyPartExamined || study?.bodyPart) {
+          reportPayload.bodyPartExamined = studyInfo.bodyPartExamined || study.bodyPart
+        }
+        
+        if (studyInfo.institutionName || study?.institutionName) {
+          reportPayload.institutionName = studyInfo.institutionName || study.institutionName
+        }
+        
+        if (studyInfo.studyInstanceUID || study?.studyId || study?.studyInstanceUID) {
+          reportPayload.studyInstanceUID = studyInfo.studyInstanceUID || study.studyId || study.studyInstanceUID
+        }
+        
+        console.log('=== CREATING REPORT ===')
+        console.log('Report payload:', reportPayload)
+        const generatedReport = await addReport(reportPayload)
+        console.log('=== REPORT CREATED SUCCESSFULLY ===')
+        console.log('Generated report:', generatedReport)
+        
+        // Refresh reports list to show the new report
+        console.log('Refreshing data to show new report...')
+        await refreshData()
+        console.log('Data refreshed successfully')
+        
+        // Show success message
+        alert(`Report created successfully for ${reportPayload.patientName}!`)
+      } catch (reportError) {
+        console.error('=== ERROR CREATING REPORT ===')
+        console.error('Report error:', reportError)
+        console.error('Error details:', {
+          message: reportError.message,
+          response: reportError.response,
+          stack: reportError.stack
+        })
+        alert(`ERROR: Failed to create report: ${reportError.message || 'Unknown error'}. Please check the console for details.`)
       }
     }, 500)
   }
@@ -537,7 +616,7 @@ const DICOMViewer = () => {
         'Follow-up in 6 months',
         'Maintain low-sodium diet'
       ],
-      physician: 'Dr. Sarah Johnson, MD',
+      physician: user ? `Dr. ${user.firstName} ${user.lastName}, MD` : 'Dr. Unknown, MD',
       reportDate: new Date().toLocaleDateString()
     }
     setReport(simulatedReport)
@@ -1681,11 +1760,11 @@ const DICOMViewer = () => {
                 <div className="report-patient-info">
                   <div className="info-item">
                     <span className="info-label">Patient Name:</span>
-                    <span className="info-value">{report.patientName}</span>
+                    <span className="info-value">{report.patientName || 'Unknown Patient'}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Patient ID:</span>
-                    <span className="info-value">{report.patientId}</span>
+                    <span className="info-value">{report.patientId || 'N/A'}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Study Date:</span>

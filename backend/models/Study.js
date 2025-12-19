@@ -22,6 +22,18 @@ const studySchema = new mongoose.Schema({
     required: [true, 'Study date is required'],
     default: Date.now
   },
+  studyTime: {
+    type: String,
+    trim: true
+  },
+  studyInstanceUID: {
+    type: String,
+    trim: true
+  },
+  institutionName: {
+    type: String,
+    trim: true
+  },
   description: {
     type: String,
     trim: true

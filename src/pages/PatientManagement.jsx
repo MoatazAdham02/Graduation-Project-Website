@@ -3,10 +3,10 @@ import { useData } from '../context/DataContext'
 import Navigation from '../components/Navigation'
 import { format } from 'date-fns'
 import './PatientManagement.css'
-import { FiSearch, FiFilter, FiPlus, FiCalendar, FiUser } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiPlus, FiCalendar, FiUser, FiTrash2 } from 'react-icons/fi'
 
 const PatientManagement = () => {
-  const { patients, studies, addPatient } = useData()
+  const { patients, studies, addPatient, deletePatient } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -48,6 +48,31 @@ const PatientManagement = () => {
 
   const getPatientStudies = (patientId) => {
     return studies.filter(s => s.patientId === patientId)
+  }
+
+  const handleDeletePatient = async (patient) => {
+    const patientName = patient.name || 'Unknown'
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete patient "${patientName}"? This action cannot be undone and will also delete all associated studies and reports.`
+    )
+    
+    if (confirmDelete) {
+      try {
+        const patientId = patient._id || patient.id
+        if (patientId) {
+          await deletePatient(patientId)
+          // Close patient detail modal if it's open
+          if (selectedPatient && (selectedPatient._id === patientId || selectedPatient.id === patientId)) {
+            setSelectedPatient(null)
+          }
+        } else {
+          alert('Unable to delete patient: Patient ID not found')
+        }
+      } catch (error) {
+        console.error('Error deleting patient:', error)
+        alert('Failed to delete patient. Please try again.')
+      }
+    }
   }
 
   const handleAddPatient = async (e) => {
@@ -148,19 +173,30 @@ const PatientManagement = () => {
               <div 
                 key={patient._id || patient.patientId || patient.id} 
                 className="patient-card"
-                onClick={() => setSelectedPatient(patient)}
               >
                 <div className="patient-header">
                   <div className="patient-avatar">
                     <FiUser />
                   </div>
-                  <div className="patient-info">
+                  <div className="patient-info" onClick={() => setSelectedPatient(patient)} style={{ flex: 1, cursor: 'pointer' }}>
                     <h3>{patient.name || 'Unknown'}</h3>
                     <p className="patient-id">ID: {patient.patientId || patient._id || patient.id}</p>
                   </div>
-                  <span className={`status-badge ${patient.status || 'active'}`}>
-                    {patient.status || 'active'}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`status-badge ${patient.status || 'active'}`}>
+                      {patient.status || 'active'}
+                    </span>
+                    <button
+                      className="delete-patient-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeletePatient(patient)
+                      }}
+                      title="Delete Patient"
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
                 </div>
                 <div className="patient-details">
                   <div className="detail-item">
