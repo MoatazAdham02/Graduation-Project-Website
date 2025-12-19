@@ -40,7 +40,28 @@ export const DataProvider = ({ children }) => {
         reportsAPI.getAll().catch(() => [])
       ])
       
-      setPatients(patientsData || [])
+      // Deduplicate patients by patientId before setting state
+      const uniquePatients = []
+      const seenPatientIds = new Set()
+      
+      if (patientsData && Array.isArray(patientsData)) {
+        for (const patient of patientsData) {
+          const patientId = (patient.patientId || patient._id || patient.id)?.toString().toLowerCase()
+          if (patientId && !seenPatientIds.has(patientId)) {
+            seenPatientIds.add(patientId)
+            uniquePatients.push(patient)
+          } else if (!patientId) {
+            // If no patientId, use _id as fallback for uniqueness
+            const fallbackId = (patient._id || patient.id)?.toString()
+            if (fallbackId && !seenPatientIds.has(fallbackId)) {
+              seenPatientIds.add(fallbackId)
+              uniquePatients.push(patient)
+            }
+          }
+        }
+      }
+      
+      setPatients(uniquePatients)
       setStudies(studiesData || [])
       setReports(reportsData || [])
     } catch (error) {
@@ -52,11 +73,42 @@ export const DataProvider = ({ children }) => {
 
   const addPatient = async (patient) => {
     try {
+      // Check for duplicate patient ID in local state before making API call
+      const existingPatient = patients.find(p => {
+        const existingId = p.patientId || p._id || p.id
+        const newId = patient.patientId
+        return existingId?.toString().toLowerCase() === newId?.toString().toLowerCase()
+      })
+      
+      if (existingPatient) {
+        throw new Error(`Patient with ID "${patient.patientId}" already exists.`)
+      }
+      
       const newPatient = await patientsAPI.create(patient)
-      setPatients(prev => [newPatient, ...prev])
+      
+      // Check again before adding to state to avoid duplicates
+      const isDuplicate = patients.some(p => {
+        const existingId = p.patientId || p._id || p.id
+        const newId = newPatient.patientId || newPatient._id || newPatient.id
+        return existingId?.toString() === newId?.toString()
+      })
+      
+      if (!isDuplicate) {
+        setPatients(prev => [newPatient, ...prev])
+      } else {
+        // If somehow a duplicate got through, reload all data to ensure consistency
+        await loadAllData()
+      }
+      
       return newPatient
     } catch (error) {
       console.error('Failed to create patient:', error)
+      // Re-throw with a more user-friendly message if it's a duplicate error
+      if (error.message && error.message.includes('already exists')) {
+        throw error
+      } else if (error.message && error.message.includes('Patient ID already exists')) {
+        throw new Error(`Patient with ID "${patient.patientId}" already exists. Please use a different Patient ID.`)
+      }
       throw error
     }
   }

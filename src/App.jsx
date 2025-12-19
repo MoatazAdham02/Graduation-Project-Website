@@ -10,7 +10,6 @@ import DICOMViewer from './components/DICOMViewer'
 import PatientManagement from './pages/PatientManagement'
 import Reports from './pages/Reports'
 import Analytics from './pages/Analytics'
-import About from './pages/About'
 import HomePage from './pages/HomePage'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -101,14 +100,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Analytics />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/about"
-                  element={
-                    <ProtectedRoute>
-                      <About />
                     </ProtectedRoute>
                   }
                 />

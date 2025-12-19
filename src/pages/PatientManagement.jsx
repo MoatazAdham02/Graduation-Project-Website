@@ -13,7 +13,27 @@ const PatientManagement = () => {
   const [selectedPatient, setSelectedPatient] = useState(null)
 
   const filteredPatients = useMemo(() => {
-    return patients.filter(patient => {
+    // First, deduplicate patients by patientId (keep the first occurrence)
+    const uniquePatients = []
+    const seenPatientIds = new Set()
+    
+    for (const patient of patients) {
+      const patientId = (patient.patientId || patient._id || patient.id)?.toString().toLowerCase()
+      if (patientId && !seenPatientIds.has(patientId)) {
+        seenPatientIds.add(patientId)
+        uniquePatients.push(patient)
+      } else if (!patientId) {
+        // If no patientId, use _id as fallback for uniqueness
+        const fallbackId = (patient._id || patient.id)?.toString()
+        if (fallbackId && !seenPatientIds.has(fallbackId)) {
+          seenPatientIds.add(fallbackId)
+          uniquePatients.push(patient)
+        }
+      }
+    }
+    
+    // Then filter by search and status
+    return uniquePatients.filter(patient => {
       const patientId = patient.patientId || patient._id || patient.id
       const matchesSearch = 
         patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,6 +56,7 @@ const PatientManagement = () => {
       const formData = new FormData(e.target)
       const dob = formData.get('dob')
       const gender = formData.get('gender')
+      const patientId = formData.get('id')
       
       // Validate required fields
       if (!dob || !gender) {
@@ -43,9 +64,20 @@ const PatientManagement = () => {
         return
       }
       
+      // Check for duplicate patient ID
+      const existingPatient = patients.find(p => {
+        const existingId = p.patientId || p._id || p.id
+        return existingId?.toString().toLowerCase() === patientId?.toString().toLowerCase()
+      })
+      
+      if (existingPatient) {
+        alert(`Patient with ID "${patientId}" already exists. Please use a different Patient ID.`)
+        return
+      }
+      
       const newPatient = {
         name: formData.get('name'),
-        patientId: formData.get('id'), // Backend expects 'patientId', not 'id'
+        patientId: patientId, // Backend expects 'patientId', not 'id'
         email: formData.get('email') || undefined,
         dateOfBirth: dob,
         gender: gender,
@@ -57,7 +89,12 @@ const PatientManagement = () => {
       e.target.reset()
     } catch (error) {
       console.error('Error adding patient:', error)
-      alert(error.message || 'Failed to add patient. Please try again.')
+      // Check if error is about duplicate patient ID
+      if (error.message && error.message.includes('already exists')) {
+        alert(error.message)
+      } else {
+        alert(error.message || 'Failed to add patient. Please try again.')
+      }
     }
   }
 

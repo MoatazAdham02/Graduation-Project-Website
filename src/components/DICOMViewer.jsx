@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useData } from '../context/DataContext'
 import { useNotifications } from '../context/NotificationContext'
+import { patientsAPI } from '../services/api'
 import Navigation from './Navigation'
 import ProgressIndicator from './ProgressIndicator'
 import SeriesViewer from './SeriesViewer'
@@ -16,7 +17,7 @@ import {
 import './DICOMViewer.css'
 
 const DICOMViewer = () => {
-  const { addStudy, addReport, addPatient } = useData()
+  const { addStudy, addReport, addPatient, patients, refreshData } = useData()
   const { notifyStudyComplete, notifyReportReady } = useNotifications()
   
   const [selectedFiles, setSelectedFiles] = useState([])
@@ -408,9 +409,21 @@ const DICOMViewer = () => {
       try {
         // Create or find patient from DICOM data
         let patient
-        if (patientInfo.patientId && patientInfo.name) {
+        
+        // First, check if patient already exists in local state
+        const existingPatient = patients.find(p => {
+          const existingId = p.patientId || p._id || p.id
+          const newId = patientInfo.patientId
+          return existingId?.toString().toLowerCase() === newId?.toString().toLowerCase()
+        })
+        
+        if (existingPatient) {
+          // Use existing patient
+          patient = existingPatient
+          console.log('Using existing patient:', patient.name)
+        } else if (patientInfo.patientId && patientInfo.name) {
+          // Patient doesn't exist locally, try to create it
           try {
-            // Try to create patient with DICOM data
             patient = await addPatient({
               name: patientInfo.name,
               patientId: patientInfo.patientId,
@@ -419,24 +432,40 @@ const DICOMViewer = () => {
               status: 'active'
             })
           } catch (error) {
-            // Patient might already exist, try to find by patientId
-            console.log('Patient creation error (might already exist):', error)
-            // For now, create with a unique ID if patientId exists but patient creation fails
-            const uniqueId = `${patientInfo.patientId}-${Date.now()}`
-            patient = await addPatient({
-              name: patientInfo.name,
-              patientId: uniqueId,
-              dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
-              gender: patientInfo.gender || 'other',
-              status: 'active'
-            })
+            // Patient might already exist in database but not in local state
+            // Reload patients to get the latest from database
+            console.log('Patient creation error (might already exist in database):', error)
+            // Patient might already exist in database but not in local state
+            // Try to fetch it directly from the API
+            if (error.message && error.message.includes('already exists')) {
+              try {
+                // Fetch all patients from API to find the existing one
+                const allPatients = await patientsAPI.getAll()
+                const foundPatient = allPatients.find(p => {
+                  const existingId = p.patientId || p._id || p.id
+                  return existingId?.toString().toLowerCase() === patientInfo.patientId?.toString().toLowerCase()
+                })
+                if (foundPatient) {
+                  patient = foundPatient
+                  // Refresh local state to include this patient
+                  await refreshData()
+                } else {
+                  throw new Error('Could not find existing patient in database')
+                }
+              } catch (fetchError) {
+                console.error('Error fetching patients:', fetchError)
+                throw new Error('Could not find or create patient')
+              }
+            } else {
+              throw error
+            }
           }
         } else {
-          // Fallback if DICOM doesn't have patient info
+          // Fallback if DICOM doesn't have patient info - create with unique ID
           const fallbackId = `PAT-${Date.now()}`
           patient = await addPatient({
             name: patientInfo.name || 'Unknown Patient',
-            patientId: patientInfo.patientId || fallbackId,
+            patientId: fallbackId,
             dateOfBirth: patientInfo.dateOfBirth || new Date('1900-01-01'),
             gender: patientInfo.gender || 'other',
             status: 'active'
