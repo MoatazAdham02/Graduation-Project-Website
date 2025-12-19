@@ -1750,3 +1750,4 @@ const DICOMViewer = () => {
 }
 
 export default DICOMViewer
+ 
