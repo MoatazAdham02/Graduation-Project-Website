@@ -57,7 +57,7 @@ const Reports = () => {
         : report.patientId
     }
     setEditingReport(normalizedReport)
-    setSelectedReport(report)
+    // Don't set selectedReport - go directly to edit mode
   }
 
   const handleSave = () => {
