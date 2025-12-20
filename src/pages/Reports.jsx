@@ -60,10 +60,33 @@ const Reports = () => {
     // Don't set selectedReport - go directly to edit mode
   }
 
-  const handleSave = () => {
-    if (editingReport) {
-      updateReport(editingReport.id, editingReport)
+  const handleSave = async () => {
+    if (!editingReport) return
+    
+    try {
+      // Get the correct ID field (_id is used by MongoDB, but we also support id)
+      const reportId = editingReport._id || editingReport.id
+      
+      if (!reportId) {
+        throw new Error('Cannot save: Report ID is missing')
+      }
+      
+      // Prepare the update data - only send fields that are editable
+      const updateData = {
+        patientName: editingReport.patientName,
+        findings: editingReport.findings || [],
+        recommendations: editingReport.recommendations || []
+      }
+      
+      await updateReport(reportId, updateData)
+      
+      // Only close the modal on successful save
       setEditingReport(null)
+    } catch (error) {
+      console.error('Error saving report:', error)
+      // Show error to user
+      const errorMessage = error.message || error.toString() || 'Unknown error occurred'
+      alert(`Failed to save report: ${errorMessage}`)
     }
   }
 
