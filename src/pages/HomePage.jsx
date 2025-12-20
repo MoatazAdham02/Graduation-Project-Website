@@ -17,6 +17,7 @@ const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openFAQ, setOpenFAQ] = useState(null)
   const [openDropdown, setOpenDropdown] = useState(null)
+  const dropdownTimeoutRef = useRef(null)
   const sectionsRef = useRef({})
 
   useEffect(() => {
@@ -172,8 +173,22 @@ const HomePage = () => {
                   <div 
                     key={link.id}
                     className={`nav-link-wrapper ${link.dropdown ? 'has-dropdown' : ''} ${openDropdown === link.id ? 'dropdown-open' : ''}`}
-                    onMouseEnter={() => link.dropdown && !isMobileMenuOpen && setOpenDropdown(link.id)}
-                    onMouseLeave={() => link.dropdown && !isMobileMenuOpen && setOpenDropdown(null)}
+                    onMouseEnter={() => {
+                      if (link.dropdown && !isMobileMenuOpen) {
+                        if (dropdownTimeoutRef.current) {
+                          clearTimeout(dropdownTimeoutRef.current)
+                          dropdownTimeoutRef.current = null
+                        }
+                        setOpenDropdown(link.id)
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (link.dropdown && !isMobileMenuOpen) {
+                        dropdownTimeoutRef.current = setTimeout(() => {
+                          setOpenDropdown(null)
+                        }, 200) // Small delay to allow moving to dropdown
+                      }
+                    }}
                   >
                     <button
                       className={`nav-link ${activeSection === link.id ? 'active' : ''} ${link.isCTA ? 'nav-link-cta' : ''}`}
@@ -190,7 +205,25 @@ const HomePage = () => {
                       {link.dropdown && <FiChevronDown className="dropdown-arrow" />}
                     </button>
                     {link.dropdown && (
-                      <div className="nav-dropdown">
+                      <div 
+                        className="nav-dropdown"
+                        onMouseEnter={() => {
+                          if (dropdownTimeoutRef.current) {
+                            clearTimeout(dropdownTimeoutRef.current)
+                            dropdownTimeoutRef.current = null
+                          }
+                          if (!isMobileMenuOpen) {
+                            setOpenDropdown(link.id)
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (!isMobileMenuOpen) {
+                            dropdownTimeoutRef.current = setTimeout(() => {
+                              setOpenDropdown(null)
+                            }, 200)
+                          }
+                        }}
+                      >
                         <div className="dropdown-content">
                           {link.dropdown.map(item => {
                             const Icon = item.icon

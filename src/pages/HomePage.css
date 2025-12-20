@@ -266,9 +266,20 @@ html {
   position: relative;
 }
 
+.nav-link-wrapper.has-dropdown::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: transparent;
+  z-index: 1001;
+}
+
 .nav-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 4px);
   left: 0;
   min-width: 240px;
   background: rgba(18, 24, 38, 0.98);
@@ -383,6 +394,17 @@ html {
   visibility: visible;
   transform: translateY(0);
   pointer-events: all;
+}
+
+.nav-link-wrapper.has-dropdown:hover::after {
+  pointer-events: all;
+}
+
+.nav-dropdown:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+  pointer-events: all !important;
 }
 
 .dropdown-arrow {
@@ -2945,6 +2967,7 @@ html {
   }
 }
 
+.faq-question {
   display: flex;
   justify-content: space-between;
   align-items: center;
