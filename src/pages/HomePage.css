@@ -123,14 +123,19 @@ html {
 
 .nav-brand {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
   transition: transform 0.3s ease;
   flex-shrink: 0;
 }
 
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
 
 .nav-brand h2 {
   font-size: 32px;
@@ -142,6 +147,18 @@ html {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1.2;
+  display: flex;
+  align-items: baseline;
+}
+
+.brand-net {
+  font-weight: 400;
+  color: var(--text-secondary);
+  -webkit-text-fill-color: var(--text-secondary);
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  opacity: 0.8;
 }
 
 .nav-tagline {
@@ -2769,6 +2786,11 @@ html {
     flex: 1;
   }
 
+
+  .nav-brand h2 {
+    font-size: 28px;
+  }
+
   .nav-tagline {
     display: none;
   }
@@ -3242,6 +3264,11 @@ html {
 
   .nav-brand {
     flex: 1;
+  }
+
+
+  .nav-brand h2 {
+    font-size: 28px;
   }
 
   .nav-tagline {
@@ -3731,6 +3758,11 @@ html {
 
   .nav-brand {
     flex: 1;
+  }
+
+
+  .nav-brand h2 {
+    font-size: 28px;
   }
 
   .nav-tagline {

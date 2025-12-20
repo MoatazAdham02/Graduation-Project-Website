@@ -25,6 +25,12 @@
 
 .logo {
   display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text {
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
@@ -35,6 +41,14 @@
   font-weight: 700;
   font-size: 18px;
   line-height: 1.2;
+  display: flex;
+  align-items: baseline;
+}
+
+.logo-net {
+  font-weight: 400;
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 .logo-tagline {
@@ -45,11 +59,6 @@
   text-transform: uppercase;
   line-height: 1.2;
   opacity: 0.9;
-}
-
-.logo svg {
-  width: 24px;
-  height: 24px;
 }
 
 .nav-links {

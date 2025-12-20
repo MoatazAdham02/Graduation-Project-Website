@@ -48,16 +48,25 @@
   margin-bottom: 50px;
 }
 
-/* Removed heart icon styles */
+.landing-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(72, 202, 228, 0.5));
+  animation: pulse-glow 3s ease-in-out infinite;
+}
 
-@keyframes heartbeat {
+@keyframes pulse-glow {
   0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.5;
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 12px rgba(72, 202, 228, 0.5));
   }
   50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.8;
+    opacity: 0.9;
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 16px rgba(72, 202, 228, 0.7));
   }
 }
 
@@ -66,6 +75,16 @@
   font-size: 32px;
   font-weight: 800;
   margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.brand-net {
+  font-weight: 400;
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 .landing-header .tagline {

@@ -164,8 +164,10 @@ const HomePage = () => {
         <div className="container">
           <div className="nav-content">
             <div className="nav-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <h2>Plaqio</h2>
-              <span className="nav-tagline">Detect. Analyze. Monitor</span>
+              <div className="brand-text">
+                <h2>CORO<span className="brand-net">net</span></h2>
+                <span className="nav-tagline">Detect. Analyze. Monitor</span>
+              </div>
             </div>
             <div className="nav-right-group">
               <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
@@ -516,7 +518,7 @@ const HomePage = () => {
               <span className="section-badge">About Us</span>
               <h2>Our Purpose</h2>
               <p>
-                Plaqio is a comprehensive web-based platform designed to revolutionize how healthcare 
+                COROnet is a comprehensive web-based platform designed to revolutionize how healthcare 
                 professionals manage, analyze, and report on medical imaging studies. Our mission is to provide 
                 doctors and radiologists with powerful tools to efficiently process DICOM files, generate 
                 detailed medical reports, and maintain comprehensive patient records.
@@ -553,7 +555,7 @@ const HomePage = () => {
           <div className={`section-header ${isVisible.serve ? 'fade-in-up' : ''}`}>
             <span className="section-badge">Who We Serve</span>
             <h2>Designed for Healthcare Excellence</h2>
-            <p className="serve-subtitle">Plaqio is designed for healthcare professionals including:</p>
+            <p className="serve-subtitle">COROnet is designed for healthcare professionals including:</p>
           </div>
           <div className="serve-list">
             <div className={`serve-item ${isVisible.serve ? 'slide-in-left' : ''}`} style={{ animationDelay: '0.1s' }}>
@@ -631,7 +633,7 @@ const HomePage = () => {
           <div className={`section-header ${isVisible.testimonials ? 'fade-in-up' : ''}`}>
             <span className="section-badge">Testimonials</span>
             <h2>Trusted by Healthcare Professionals</h2>
-            <p>See what doctors and radiologists are saying about Plaqio</p>
+            <p>See what doctors and radiologists are saying about COROnet</p>
           </div>
           <div className="testimonials-grid">
             <div className={`testimonial-card ${isVisible.testimonials ? 'slide-in-left' : ''}`} style={{ animationDelay: '0.1s' }}>
@@ -644,7 +646,7 @@ const HomePage = () => {
                 <div className="quote-icon">"</div>
               </div>
               <p className="testimonial-text">
-                "Plaqio has revolutionized our workflow. The DICOM viewer is incredibly intuitive, and the automated report generation saves us hours every day."
+                "COROnet has revolutionized our workflow. The DICOM viewer is incredibly intuitive, and the automated report generation saves us hours every day."
               </p>
               <div className="testimonial-author">
                 <div className="author-avatar">DR</div>
@@ -884,7 +886,7 @@ const HomePage = () => {
           <div className={`section-header ${isVisible.faq ? 'fade-in-up' : ''}`}>
             <span className="section-badge">FAQ</span>
             <h2>Frequently Asked Questions</h2>
-            <p>Everything you need to know about Plaqio</p>
+            <p>Everything you need to know about COROnet</p>
           </div>
           <div className="faq-list">
             {[
@@ -893,12 +895,12 @@ const HomePage = () => {
                 answer: "Absolutely. We use end-to-end encryption, comply with HIPAA regulations, and undergo regular security audits. Your data is stored securely and only accessible to authorized personnel."
               },
               {
-                question: "Can I try Plaqio before purchasing?",
+                question: "Can I try COROnet before purchasing?",
                 answer: "Yes! We offer a 14-day free trial with full access to all features. No credit card required. You can cancel anytime during the trial period."
               },
               {
                 question: "What DICOM file formats are supported?",
-                answer: "Plaqio supports all standard DICOM formats including CT, MRI, X-Ray, Ultrasound, and PET scans. We also support common medical imaging file extensions (.dcm, .dicom)."
+                answer: "COROnet supports all standard DICOM formats including CT, MRI, X-Ray, Ultrasound, and PET scans. We also support common medical imaging file extensions (.dcm, .dicom)."
               },
               {
                 question: "How does the AI-powered analysis work?",
@@ -947,7 +949,7 @@ const HomePage = () => {
               <span>Start Your Free Trial Today</span>
             </div>
             <h2>Ready to Transform Your Medical Imaging Workflow?</h2>
-            <p>Join thousands of healthcare professionals who trust Plaqio for their medical imaging needs. No credit card required.</p>
+            <p>Join thousands of healthcare professionals who trust COROnet for their medical imaging needs. No credit card required.</p>
             <div className="cta-features">
               <div className="cta-feature">
                 <FiCheck />
@@ -986,7 +988,7 @@ const HomePage = () => {
         <div className="container">
           <div className="footer-content">
             <div className="footer-brand">
-              <h3>Plaqio</h3>
+              <h3>CORO<span className="brand-net">net</span></h3>
               <p>Detect. Analyze. Monitor</p>
               <p className="footer-description">
                 Advanced Medical Imaging Management System for Healthcare Professionals
@@ -1026,7 +1028,7 @@ const HomePage = () => {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 Plaqio. All rights reserved.</p>
+            <p>&copy; 2025 COROnet. All rights reserved.</p>
           </div>
         </div>
       </footer>

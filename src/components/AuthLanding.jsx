@@ -9,7 +9,8 @@ const AuthLanding = () => {
     <div className="auth-landing">
       <div className="landing-content">
         <div className="landing-header">
-          <h1>Plaqio</h1>
+          <img src="/coronet-logo.svg" alt="COROnet Logo" className="landing-logo" />
+          <h1>CORO<span className="brand-net">net</span></h1>
           <p className="tagline">Detect. Analyze. Monitor</p>
         </div>
 

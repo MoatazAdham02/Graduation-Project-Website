@@ -38,8 +38,10 @@ const Navigation = () => {
     <nav className="main-navigation">
       <div className="nav-brand">
         <div className="logo">
-          <span className="logo-name">Plaqio</span>
-          <span className="logo-tagline">Detect. Analyze. Monitor</span>
+          <div className="logo-text">
+            <span className="logo-name">CORO<span className="logo-net">net</span></span>
+            <span className="logo-tagline">Detect. Analyze. Monitor</span>
+          </div>
         </div>
       </div>
 
