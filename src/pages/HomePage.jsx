@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { 
   FiHeart, FiActivity, FiShield, FiUsers, FiFileText, FiBarChart2, 
   FiArrowRight, FiFacebook, FiInstagram, FiYoutube, FiCheck, 
-  FiTrendingUp, FiClock, FiAward, FiZap
+  FiTrendingUp, FiClock, FiAward, FiZap, FiStar, FiGlobe, FiLock,
+  FiServer, FiDownload, FiPlay, FiChevronDown, FiChevronUp, FiX
 } from 'react-icons/fi'
 import './HomePage.css'
 
@@ -14,6 +15,8 @@ const HomePage = () => {
   const [activeSection, setActiveSection] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [openFAQ, setOpenFAQ] = useState(null)
+  const [openDropdown, setOpenDropdown] = useState(null)
   const sectionsRef = useRef({})
 
   useEffect(() => {
@@ -66,11 +69,38 @@ const HomePage = () => {
   }
 
   const navLinks = [
-    { id: 'features', label: 'Features' },
-    { id: 'about', label: 'About' },
-    { id: 'serve', label: 'Who We Serve' },
-    { id: 'security', label: 'Security' },
-    { id: 'cta', label: 'Get Started' }
+    { 
+      id: 'features', 
+      label: 'Features',
+      dropdown: [
+        { id: 'features', label: 'All Features', icon: FiActivity },
+        { id: 'dicom-viewer', label: 'DICOM Viewer', icon: FiActivity },
+        { id: 'patient-management', label: 'Patient Management', icon: FiUsers },
+        { id: 'reports', label: 'Medical Reports', icon: FiFileText },
+        { id: 'analytics', label: 'Analytics Dashboard', icon: FiBarChart2 }
+      ]
+    },
+    { 
+      id: 'about', 
+      label: 'About',
+      dropdown: [
+        { id: 'about', label: 'Our Purpose', icon: FiHeart },
+        { id: 'serve', label: 'Who We Serve', icon: FiUsers },
+        { id: 'testimonials', label: 'Testimonials', icon: FiStar },
+        { id: 'partners', label: 'Partners', icon: FiGlobe }
+      ]
+    },
+    { 
+      id: 'security', 
+      label: 'Security',
+      dropdown: [
+        { id: 'security', label: 'Security Overview', icon: FiShield },
+        { id: 'trust', label: 'Certifications', icon: FiAward },
+        { id: 'compliance', label: 'Compliance', icon: FiLock }
+      ]
+    },
+    { id: 'pricing', label: 'Pricing' },
+    { id: 'faq', label: 'FAQ' }
   ]
 
   useEffect(() => {
@@ -139,13 +169,51 @@ const HomePage = () => {
             <div className="nav-right-group">
               <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                 {navLinks.map(link => (
-                  <button
+                  <div 
                     key={link.id}
-                    className={`nav-link ${activeSection === link.id ? 'active' : ''}`}
-                    onClick={() => scrollToSection(link.id)}
+                    className={`nav-link-wrapper ${link.dropdown ? 'has-dropdown' : ''} ${openDropdown === link.id ? 'dropdown-open' : ''}`}
+                    onMouseEnter={() => link.dropdown && !isMobileMenuOpen && setOpenDropdown(link.id)}
+                    onMouseLeave={() => link.dropdown && !isMobileMenuOpen && setOpenDropdown(null)}
                   >
-                    {link.label}
-                  </button>
+                    <button
+                      className={`nav-link ${activeSection === link.id ? 'active' : ''} ${link.isCTA ? 'nav-link-cta' : ''}`}
+                      onClick={() => {
+                        if (!link.dropdown) {
+                          scrollToSection(link.id)
+                          setIsMobileMenuOpen(false)
+                        } else if (isMobileMenuOpen) {
+                          setOpenDropdown(openDropdown === link.id ? null : link.id)
+                        }
+                      }}
+                    >
+                      {link.label}
+                      {link.dropdown && <FiChevronDown className="dropdown-arrow" />}
+                    </button>
+                    {link.dropdown && (
+                      <div className="nav-dropdown">
+                        <div className="dropdown-content">
+                          {link.dropdown.map(item => {
+                            const Icon = item.icon
+                            return (
+                              <button
+                                key={item.id}
+                                className="dropdown-item"
+                                onClick={() => {
+                                  scrollToSection(item.id)
+                                  setOpenDropdown(null)
+                                  setIsMobileMenuOpen(false)
+                                }}
+                              >
+                                <Icon className="dropdown-icon" />
+                                <span>{item.label}</span>
+                                <FiArrowRight className="dropdown-arrow-right" />
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
               <div className="nav-actions">
@@ -520,6 +588,319 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section 
+        id="testimonials" 
+        ref={el => sectionsRef.current.testimonials = el}
+        className={`testimonials-section ${isVisible.testimonials ? 'fade-in-up' : ''}`}
+      >
+        <div className="container">
+          <div className={`section-header ${isVisible.testimonials ? 'fade-in-up' : ''}`}>
+            <span className="section-badge">Testimonials</span>
+            <h2>Trusted by Healthcare Professionals</h2>
+            <p>See what doctors and radiologists are saying about Plaqio</p>
+          </div>
+          <div className="testimonials-grid">
+            <div className={`testimonial-card ${isVisible.testimonials ? 'slide-in-left' : ''}`} style={{ animationDelay: '0.1s' }}>
+              <div className="testimonial-header">
+                <div className="testimonial-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar key={i} style={{ color: '#FFD700' }} />
+                  ))}
+                </div>
+                <div className="quote-icon">"</div>
+              </div>
+              <p className="testimonial-text">
+                "Plaqio has revolutionized our workflow. The DICOM viewer is incredibly intuitive, and the automated report generation saves us hours every day."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">DR</div>
+                <div className="author-info">
+                  <div className="author-name">Dr. Sarah Mitchell</div>
+                  <div className="author-title">Chief Radiologist, City Hospital</div>
+                </div>
+              </div>
+            </div>
+            <div className={`testimonial-card ${isVisible.testimonials ? 'slide-in-up' : ''}`} style={{ animationDelay: '0.2s' }}>
+              <div className="testimonial-header">
+                <div className="testimonial-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar key={i} style={{ color: '#FFD700' }} />
+                  ))}
+                </div>
+                <div className="quote-icon">"</div>
+              </div>
+              <p className="testimonial-text">
+                "The patient management system is comprehensive yet easy to use. Security features give us confidence that our data is protected."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">JM</div>
+                <div className="author-info">
+                  <div className="author-name">Dr. James Anderson</div>
+                  <div className="author-title">Cardiologist, Medical Center</div>
+                </div>
+              </div>
+            </div>
+            <div className={`testimonial-card ${isVisible.testimonials ? 'slide-in-right' : ''}`} style={{ animationDelay: '0.3s' }}>
+              <div className="testimonial-header">
+                <div className="testimonial-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar key={i} style={{ color: '#FFD700' }} />
+                  ))}
+                </div>
+                <div className="quote-icon">"</div>
+              </div>
+              <p className="testimonial-text">
+                "Best medical imaging platform we've used. The analytics dashboard provides insights we never had before. Highly recommended!"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">EM</div>
+                <div className="author-info">
+                  <div className="author-name">Dr. Emily Rodriguez</div>
+                  <div className="author-title">Medical Director, Health Clinic</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partners/Trust Section */}
+      <section 
+        id="partners" 
+        ref={el => sectionsRef.current.partners = el}
+        className={`partners-section ${isVisible.partners ? 'fade-in-up' : ''}`}
+      >
+        <div className="container">
+          <div className={`section-header ${isVisible.partners ? 'fade-in-up' : ''}`}>
+            <span className="section-badge">Trusted By</span>
+            <h2>Leading Healthcare Institutions</h2>
+          </div>
+          <div className="partners-grid">
+            <div className={`partner-logo ${isVisible.partners ? 'scale-in' : ''}`} style={{ animationDelay: '0.1s' }}>
+              <div className="logo-placeholder">
+                <FiGlobe />
+                <span>Medical Center</span>
+              </div>
+            </div>
+            <div className={`partner-logo ${isVisible.partners ? 'scale-in' : ''}`} style={{ animationDelay: '0.2s' }}>
+              <div className="logo-placeholder">
+                <FiHeart />
+                <span>City Hospital</span>
+              </div>
+            </div>
+            <div className={`partner-logo ${isVisible.partners ? 'scale-in' : ''}`} style={{ animationDelay: '0.3s' }}>
+              <div className="logo-placeholder">
+                <FiActivity />
+                <span>Health Clinic</span>
+              </div>
+            </div>
+            <div className={`partner-logo ${isVisible.partners ? 'scale-in' : ''}`} style={{ animationDelay: '0.4s' }}>
+              <div className="logo-placeholder">
+                <FiShield />
+                <span>Regional Medical</span>
+              </div>
+            </div>
+            <div className={`partner-logo ${isVisible.partners ? 'scale-in' : ''}`} style={{ animationDelay: '0.5s' }}>
+              <div className="logo-placeholder">
+                <FiUsers />
+                <span>Healthcare Group</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges Section */}
+      <section 
+        id="trust" 
+        ref={el => sectionsRef.current.trust = el}
+        className={`trust-badges-section ${isVisible.trust ? 'fade-in-up' : ''}`}
+      >
+        <div className="container">
+          <div className={`section-header ${isVisible.trust ? 'fade-in-up' : ''}`}>
+            <span className="section-badge">Certifications & Compliance</span>
+            <h2>Trusted & Certified</h2>
+            <p>We meet the highest standards for healthcare data security and compliance</p>
+          </div>
+          <div className="trust-badges-grid">
+            <div className={`trust-badge ${isVisible.trust ? 'scale-in' : ''}`} style={{ animationDelay: '0.1s' }}>
+              <div className="badge-icon">
+                <FiShield />
+              </div>
+              <h4>HIPAA Compliant</h4>
+              <p>Fully compliant with Health Insurance Portability and Accountability Act</p>
+            </div>
+            <div className={`trust-badge ${isVisible.trust ? 'scale-in' : ''}`} style={{ animationDelay: '0.2s' }}>
+              <div className="badge-icon">
+                <FiLock />
+              </div>
+              <h4>End-to-End Encryption</h4>
+              <p>256-bit SSL encryption for all data transmission and storage</p>
+            </div>
+            <div className={`trust-badge ${isVisible.trust ? 'scale-in' : ''}`} style={{ animationDelay: '0.3s' }}>
+              <div className="badge-icon">
+                <FiServer />
+              </div>
+              <h4>SOC 2 Certified</h4>
+              <p>Regular security audits and compliance certifications</p>
+            </div>
+            <div className={`trust-badge ${isVisible.trust ? 'scale-in' : ''}`} style={{ animationDelay: '0.4s' }}>
+              <div className="badge-icon">
+                <FiAward />
+              </div>
+              <h4>ISO 27001</h4>
+              <p>International standard for information security management</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section 
+        id="pricing" 
+        ref={el => sectionsRef.current.pricing = el}
+        className={`pricing-section ${isVisible.pricing ? 'fade-in-up' : ''}`}
+      >
+        <div className="container">
+          <div className={`section-header ${isVisible.pricing ? 'fade-in-up' : ''}`}>
+            <span className="section-badge">Pricing</span>
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Choose the plan that works best for your practice</p>
+          </div>
+          <div className="pricing-grid">
+            <div className={`pricing-card ${isVisible.pricing ? 'slide-in-left' : ''}`} style={{ animationDelay: '0.1s' }}>
+              <div className="pricing-header">
+                <h3>Starter</h3>
+                <div className="pricing-amount">
+                  <span className="currency">$</span>
+                  <span className="amount">49</span>
+                  <span className="period">/month</span>
+                </div>
+                <p className="pricing-description">Perfect for individual practitioners</p>
+              </div>
+              <ul className="pricing-features">
+                <li><FiCheck /> Up to 100 patients</li>
+                <li><FiCheck /> 500 studies/month</li>
+                <li><FiCheck /> Basic DICOM viewer</li>
+                <li><FiCheck /> Standard reports</li>
+                <li><FiCheck /> Email support</li>
+              </ul>
+              <button className="btn btn-secondary btn-large" onClick={() => navigate('/register')}>
+                Start Free Trial
+              </button>
+            </div>
+            <div className={`pricing-card featured ${isVisible.pricing ? 'slide-in-up' : ''}`} style={{ animationDelay: '0.2s' }}>
+              <div className="popular-badge">Most Popular</div>
+              <div className="pricing-header">
+                <h3>Professional</h3>
+                <div className="pricing-amount">
+                  <span className="currency">$</span>
+                  <span className="amount">149</span>
+                  <span className="period">/month</span>
+                </div>
+                <p className="pricing-description">Ideal for small to medium practices</p>
+              </div>
+              <ul className="pricing-features">
+                <li><FiCheck /> Unlimited patients</li>
+                <li><FiCheck /> Unlimited studies</li>
+                <li><FiCheck /> Advanced DICOM viewer</li>
+                <li><FiCheck /> AI-powered analysis</li>
+                <li><FiCheck /> Advanced analytics</li>
+                <li><FiCheck /> Priority support</li>
+                <li><FiCheck /> Custom integrations</li>
+              </ul>
+              <button className="btn btn-primary btn-large btn-pulse" onClick={() => navigate('/register')}>
+                Start Free Trial
+                <FiArrowRight />
+              </button>
+            </div>
+            <div className={`pricing-card ${isVisible.pricing ? 'slide-in-right' : ''}`} style={{ animationDelay: '0.3s' }}>
+              <div className="pricing-header">
+                <h3>Enterprise</h3>
+                <div className="pricing-amount">
+                  <span className="currency">$</span>
+                  <span className="amount">Custom</span>
+                </div>
+                <p className="pricing-description">For large healthcare institutions</p>
+              </div>
+              <ul className="pricing-features">
+                <li><FiCheck /> Everything in Professional</li>
+                <li><FiCheck /> Multi-location support</li>
+                <li><FiCheck /> Dedicated account manager</li>
+                <li><FiCheck /> Custom development</li>
+                <li><FiCheck /> On-premise deployment</li>
+                <li><FiCheck /> 24/7 phone support</li>
+                <li><FiCheck /> SLA guarantee</li>
+              </ul>
+              <button className="btn btn-secondary btn-large" onClick={() => navigate('/register')}>
+                Contact Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section 
+        id="faq" 
+        ref={el => sectionsRef.current.faq = el}
+        className={`faq-section ${isVisible.faq ? 'fade-in-up' : ''}`}
+      >
+        <div className="container">
+          <div className={`section-header ${isVisible.faq ? 'fade-in-up' : ''}`}>
+            <span className="section-badge">FAQ</span>
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know about Plaqio</p>
+          </div>
+          <div className="faq-list">
+            {[
+              {
+                question: "Is my patient data secure?",
+                answer: "Absolutely. We use end-to-end encryption, comply with HIPAA regulations, and undergo regular security audits. Your data is stored securely and only accessible to authorized personnel."
+              },
+              {
+                question: "Can I try Plaqio before purchasing?",
+                answer: "Yes! We offer a 14-day free trial with full access to all features. No credit card required. You can cancel anytime during the trial period."
+              },
+              {
+                question: "What DICOM file formats are supported?",
+                answer: "Plaqio supports all standard DICOM formats including CT, MRI, X-Ray, Ultrasound, and PET scans. We also support common medical imaging file extensions (.dcm, .dicom)."
+              },
+              {
+                question: "How does the AI-powered analysis work?",
+                answer: "Our AI system analyzes DICOM images to identify patterns and anomalies, providing preliminary findings that assist healthcare professionals in their diagnosis. The final diagnosis always remains with the medical professional."
+              },
+              {
+                question: "Can I export reports in different formats?",
+                answer: "Yes, you can export reports as PDF files or print them directly. All reports include patient information, study details, findings, and recommendations in a professional format."
+              },
+              {
+                question: "Is there a limit on the number of patients or studies?",
+                answer: "The Starter plan includes up to 100 patients and 500 studies per month. Professional and Enterprise plans offer unlimited patients and studies."
+              }
+            ].map((faq, index) => (
+              <div 
+                key={index} 
+                className={`faq-item ${isVisible.faq ? 'fade-in-up' : ''} ${openFAQ === index ? 'open' : ''}`}
+                style={{ animationDelay: `${0.1 * index}s` }}
+              >
+                <button 
+                  className="faq-question"
+                  onClick={() => setOpenFAQ(openFAQ === index ? null : index)}
+                >
+                  <span>{faq.question}</span>
+                  {openFAQ === index ? <FiChevronUp /> : <FiChevronDown />}
+                </button>
+                <div className="faq-answer">
+                  <p>{faq.answer}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section 
         id="cta" 
@@ -527,22 +908,42 @@ const HomePage = () => {
         className={`cta-section ${isVisible.cta ? 'fade-in-up' : ''}`}
       >
         <div className="container">
-          <h2>Ready to Get Started?</h2>
-          <p>Join healthcare professionals who trust Plaqio for their medical imaging needs</p>
-          <div className="cta-buttons">
-            <button 
-              className="btn btn-primary btn-large btn-pulse"
-              onClick={() => navigate('/register')}
-            >
-              Create Free Account
-              <FiArrowRight />
-            </button>
-            <button 
-              className="btn btn-secondary btn-large"
-              onClick={() => navigate('/login')}
-            >
-              Sign In
-            </button>
+          <div className="cta-content">
+            <div className="cta-badge">
+              <FiZap />
+              <span>Start Your Free Trial Today</span>
+            </div>
+            <h2>Ready to Transform Your Medical Imaging Workflow?</h2>
+            <p>Join thousands of healthcare professionals who trust Plaqio for their medical imaging needs. No credit card required.</p>
+            <div className="cta-features">
+              <div className="cta-feature">
+                <FiCheck />
+                <span>14-day free trial</span>
+              </div>
+              <div className="cta-feature">
+                <FiCheck />
+                <span>Full access to all features</span>
+              </div>
+              <div className="cta-feature">
+                <FiCheck />
+                <span>Cancel anytime</span>
+              </div>
+            </div>
+            <div className="cta-buttons">
+              <button 
+                className="btn btn-primary btn-large btn-pulse"
+                onClick={() => navigate('/register')}
+              >
+                Create Free Account
+                <FiArrowRight />
+              </button>
+              <button 
+                className="btn btn-secondary btn-large"
+                onClick={() => navigate('/login')}
+              >
+                Sign In
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -601,3 +1002,4 @@ const HomePage = () => {
 }
 
 export default HomePage
+
