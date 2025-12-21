@@ -142,3 +142,11 @@ export const reportsAPI = {
   }),
 };
 
+// Chatbot API
+export const chatbotAPI = {
+  sendMessage: (message, conversationHistory = []) => apiCall('/chatbot', {
+    method: 'POST',
+    body: { message, conversationHistory },
+  }),
+};
+

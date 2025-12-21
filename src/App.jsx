@@ -11,6 +11,7 @@ import PatientManagement from './pages/PatientManagement'
 import Reports from './pages/Reports'
 import Analytics from './pages/Analytics'
 import HomePage from './pages/HomePage'
+import Chatbot from './components/Chatbot'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
@@ -105,6 +106,7 @@ function App() {
                 />
               </Routes>
               <ToastContainer />
+              <Chatbot />
             </Router>
           </NotificationProvider>
         </DataProvider>
