@@ -1,0 +1,75 @@
+/* ============================================
+   SMOOTH PAGE TRANSITIONS
+   ============================================ */
+.page-transition {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* Optimize rendering */
+  will-change: transform, opacity;
+  /* Smooth rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page-transition-entering {
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
+.page-transition-exiting {
+  animation: pageExit 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0) scale(0.98);
+    filter: blur(4px);
+  }
+}
+
+/* Optimize for performance - reset will-change after animation */
+.page-transition * {
+  will-change: auto;
+}
+
+.page-transition-entering *,
+.page-transition-exiting * {
+  /* Only animate transform and opacity for better performance */
+  will-change: transform, opacity;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-entering,
+  .page-transition-exiting {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+

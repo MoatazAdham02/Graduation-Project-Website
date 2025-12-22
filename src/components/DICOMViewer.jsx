@@ -343,42 +343,6 @@ const DICOMViewer = () => {
         const previewUrl = canvas.toDataURL()
         previews.push(previewUrl)
         
-        // FORCE IMMEDIATE CANVAS RENDER for first file - don't wait for state updates
-        if (i === 0 && canvasRef.current) {
-          const mainCanvas = canvasRef.current
-          const mainCtx = mainCanvas.getContext('2d')
-          const img = new Image()
-          img.onload = () => {
-            mainCanvas.width = img.width
-            mainCanvas.height = img.height
-            mainCtx.drawImage(img, 0, 0)
-            // Apply filters immediately for visibility using current filter values
-            const imageData = mainCtx.getImageData(0, 0, mainCanvas.width, mainCanvas.height)
-            const data = imageData.data
-            const length = data.length
-            
-            // Apply brightness and contrast directly (matching current filter state)
-            const brightness = 15
-            const contrast = 1.3
-            
-            for (let j = 0; j < length; j += 4) {
-              // Apply brightness
-              data[j] = Math.max(0, Math.min(255, data[j] + brightness))     // R
-              data[j + 1] = Math.max(0, Math.min(255, data[j + 1] + brightness)) // G
-              data[j + 2] = Math.max(0, Math.min(255, data[j + 2] + brightness)) // B
-              
-              // Apply contrast
-              const contrastFactor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255))
-              data[j] = Math.max(0, Math.min(255, contrastFactor * (data[j] - 128) + 128))
-              data[j + 1] = Math.max(0, Math.min(255, contrastFactor * (data[j + 1] - 128) + 128))
-              data[j + 2] = Math.max(0, Math.min(255, contrastFactor * (data[j + 2] - 128) + 128))
-            }
-            
-            mainCtx.putImageData(imageData, 0, 0)
-          }
-          img.src = previewUrl
-        }
-        
         // Update state immediately so preview shows right away
         setFilePreviews([...previews])
         setDicomData([...parsedData])
@@ -392,6 +356,55 @@ const DICOMViewer = () => {
           } else {
             setWindowLevel({ window: 400, level: 50 })
           }
+          
+          // FORCE IMMEDIATE CANVAS RENDER for first file - render after state is set
+          setTimeout(() => {
+            if (canvasRef.current && previewUrl) {
+              const mainCanvas = canvasRef.current
+              const mainCtx = mainCanvas.getContext('2d')
+              const img = new Image()
+              img.crossOrigin = 'anonymous'
+              img.onload = () => {
+                if (!canvasRef.current) return
+                mainCanvas.width = img.width || 512
+                mainCanvas.height = img.height || 512
+                mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height)
+                mainCtx.drawImage(img, 0, 0)
+                
+                // Apply filters immediately for visibility
+                try {
+                  const imageData = mainCtx.getImageData(0, 0, mainCanvas.width, mainCanvas.height)
+                  const data = imageData.data
+                  const length = data.length
+                  
+                  // Apply brightness and contrast directly
+                  const brightness = imageFilters.brightness || 15
+                  const contrast = imageFilters.contrast || 1.3
+                  
+                  for (let j = 0; j < length; j += 4) {
+                    // Apply brightness
+                    data[j] = Math.max(0, Math.min(255, data[j] + brightness))
+                    data[j + 1] = Math.max(0, Math.min(255, data[j + 1] + brightness))
+                    data[j + 2] = Math.max(0, Math.min(255, data[j + 2] + brightness))
+                    
+                    // Apply contrast
+                    const contrastFactor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255))
+                    data[j] = Math.max(0, Math.min(255, contrastFactor * (data[j] - 128) + 128))
+                    data[j + 1] = Math.max(0, Math.min(255, contrastFactor * (data[j + 1] - 128) + 128))
+                    data[j + 2] = Math.max(0, Math.min(255, contrastFactor * (data[j + 2] - 128) + 128))
+                  }
+                  
+                  mainCtx.putImageData(imageData, 0, 0)
+                } catch (e) {
+                  console.error('Error applying filters:', e)
+                }
+              }
+              img.onerror = () => {
+                console.error('Failed to load preview image')
+              }
+              img.src = previewUrl
+            }
+          }, 100)
         }
         
         // Note: Saving to localStorage is handled by the useEffect hook above
@@ -421,6 +434,36 @@ const DICOMViewer = () => {
     }
 
     setUploadProgress(100)
+    
+    // Ensure canvas is rendered after all files are processed
+    setTimeout(() => {
+      if (canvasRef.current && filePreviews.length > 0) {
+        const currentPreview = filePreviews[0]
+        if (currentPreview) {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => {
+            if (!canvasRef.current) return
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext('2d')
+            canvas.width = img.width || 512
+            canvas.height = img.height || 512
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.drawImage(img, 0, 0)
+            
+            // Apply filters
+            try {
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+              const filteredData = applyFilters(imageData)
+              ctx.putImageData(filteredData, 0, 0)
+            } catch (e) {
+              console.error('Error applying filters:', e)
+            }
+          }
+          img.src = currentPreview
+        }
+      }
+    }, 200)
     
     // Generate series data
     const series = validFiles.map((file, idx) => ({
@@ -909,31 +952,41 @@ const DICOMViewer = () => {
 
   // Render DICOM to canvas when file is loaded or window/level changes
   useEffect(() => {
-    if (canvasRef.current && filePreviews.length > 0 && dicomData.length > 0) {
-      const canvas = canvasRef.current
+    if (!canvasRef.current) return
+    
+    const canvas = canvasRef.current
+    
+    // If we have file previews and DICOM data, render immediately
+    if (filePreviews.length > 0 && dicomData.length > 0) {
       const currentPreview = filePreviews[currentFileIndex]
       const currentDicom = dicomData[currentFileIndex]
       
-      // Priority: Show preview immediately if available (fastest)
+      // Priority 1: Show preview immediately if available (fastest)
       if (currentPreview) {
         const img = new Image()
+        img.crossOrigin = 'anonymous'
         img.onload = () => {
+          if (!canvasRef.current) return
           const ctx = canvas.getContext('2d')
-          canvas.width = img.width
-          canvas.height = img.height
+          canvas.width = img.width || 512
+          canvas.height = img.height || 512
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
           ctx.drawImage(img, 0, 0)
           
-          // ALWAYS apply filters for immediate visibility (filters are already applied in preview, but re-apply to ensure visibility)
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-          const filteredData = applyFilters(imageData)
-          ctx.putImageData(filteredData, 0, 0)
+          // ALWAYS apply filters for immediate visibility
+          try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            const filteredData = applyFilters(imageData)
+            ctx.putImageData(filteredData, 0, 0)
+          } catch (e) {
+            console.error('Error applying filters:', e)
+          }
         }
         img.onerror = () => {
           // If preview fails, try to render from DICOM data
           if (currentDicom && currentDicom.pixelData) {
             try {
               renderDICOMToCanvas(canvas, currentDicom, windowLevel)
-              // Always apply filters
               const ctx = canvas.getContext('2d')
               const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
               const filteredData = applyFilters(imageData)
@@ -944,12 +997,11 @@ const DICOMViewer = () => {
           }
         }
         img.src = currentPreview
-      } else if (currentDicom && currentDicom.pixelData) {
-        // Fallback: Render from DICOM pixelData if preview not available
+      } 
+      // Priority 2: Render from DICOM pixelData if preview not available
+      else if (currentDicom && currentDicom.pixelData) {
         try {
           renderDICOMToCanvas(canvas, currentDicom, windowLevel)
-          
-          // Always apply filters for immediate visibility
           const ctx = canvas.getContext('2d')
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const filteredData = applyFilters(imageData)
@@ -957,18 +1009,45 @@ const DICOMViewer = () => {
         } catch (error) {
           console.error('Error rendering DICOM:', error)
         }
-      } else {
-        // Show placeholder only if nothing is available
-        const ctx = canvas.getContext('2d')
-        canvas.width = 512
-        canvas.height = 512
-        ctx.fillStyle = 'transparent'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.fillStyle = '#fff'
-        ctx.font = '16px Arial'
-        ctx.textAlign = 'center'
-        ctx.fillText('Loading DICOM...', canvas.width / 2, canvas.height / 2)
       }
+    } 
+    // If we have previews but no DICOM data yet, show preview
+    else if (filePreviews.length > 0) {
+      const currentPreview = filePreviews[currentFileIndex]
+      if (currentPreview) {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => {
+          if (!canvasRef.current) return
+          const ctx = canvas.getContext('2d')
+          canvas.width = img.width || 512
+          canvas.height = img.height || 512
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          ctx.drawImage(img, 0, 0)
+          
+          // Apply filters
+          try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            const filteredData = applyFilters(imageData)
+            ctx.putImageData(filteredData, 0, 0)
+          } catch (e) {
+            console.error('Error applying filters:', e)
+          }
+        }
+        img.src = currentPreview
+      }
+    }
+    // Show placeholder only if nothing is available
+    else {
+      const ctx = canvas.getContext('2d')
+      canvas.width = 512
+      canvas.height = 512
+      ctx.fillStyle = 'rgba(19, 47, 76, 0.5)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#48CAE4'
+      ctx.font = '18px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('Upload DICOM files to view', canvas.width / 2, canvas.height / 2 - 10)
     }
   }, [currentFileIndex, windowLevel, dicomData, filePreviews, imageFilters, applyFilters])
 
@@ -1445,21 +1524,6 @@ const DICOMViewer = () => {
                           />
                           Invert
                         </label>
-                        <div className="filter-slider">
-                          <label>Brightness: {imageFilters.brightness}</label>
-                          <div className="zoom-controls">
-                            <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.max(-50, prev.brightness - 1) }))}><FiZoomOut /></button>
-                            <input
-                              type="range"
-                              min="-50"
-                              max="50"
-                              step="1"
-                              value={imageFilters.brightness}
-                              onChange={(e) => setImageFilters(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
-                            />
-                            <button onClick={() => setImageFilters(prev => ({ ...prev, brightness: Math.min(50, prev.brightness + 1) }))}><FiZoomIn /></button>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>

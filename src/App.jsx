@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import HeartIntro from './components/HeartIntro'
@@ -12,6 +12,7 @@ import Reports from './pages/Reports'
 import Analytics from './pages/Analytics'
 import HomePage from './pages/HomePage'
 import Chatbot from './components/Chatbot'
+import PageTransition from './components/PageTransition'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
@@ -59,6 +60,54 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />
 }
 
+const AppRoutes = () => {
+  const location = useLocation()
+  
+  return (
+    <PageTransition>
+      <Routes location={location}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/intro" element={<HeartIntro />} />
+        <Route path="/auth-landing" element={<AuthLanding />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/viewer"
+          element={
+            <ProtectedRoute>
+              <DICOMViewer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients"
+          element={
+            <ProtectedRoute>
+              <PatientManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </PageTransition>
+  )
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -66,46 +115,19 @@ function App() {
         <DataProvider>
           <NotificationProvider>
             <Router>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/intro" element={<HeartIntro />} />
-                <Route path="/auth-landing" element={<AuthLanding />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/viewer"
-                  element={
-                    <ProtectedRoute>
-                      <DICOMViewer />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/patients"
-                  element={
-                    <ProtectedRoute>
-                      <PatientManagement />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/reports"
-                  element={
-                    <ProtectedRoute>
-                      <Reports />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/analytics"
-                  element={
-                    <ProtectedRoute>
-                      <Analytics />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-              <ToastContainer />
+              <AppRoutes />
+              <ToastContainer 
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                transition={undefined}
+              />
               <Chatbot />
             </Router>
           </NotificationProvider>

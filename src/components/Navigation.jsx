@@ -1,15 +1,15 @@
-import React from 'react'
+import React, { memo, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { FiHome, FiUsers, FiFileText, FiBarChart2, FiLogOut, FiMaximize2 } from 'react-icons/fi'
 import './Navigation.css'
 
-const Navigation = () => {
+const Navigation = memo(() => {
   const location = useLocation()
   const { logout } = useAuth()
   const [isFullscreen, setIsFullscreen] = React.useState(false)
 
-  const handleFullscreen = () => {
+  const handleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen()
       setIsFullscreen(true)
@@ -17,7 +17,7 @@ const Navigation = () => {
       document.exitFullscreen()
       setIsFullscreen(false)
     }
-  }
+  }, [])
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
@@ -80,7 +80,9 @@ const Navigation = () => {
       </div>
     </nav>
   )
-}
+})
+
+Navigation.displayName = 'Navigation'
 
 export default Navigation
 

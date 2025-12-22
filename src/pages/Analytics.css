@@ -1,104 +1,397 @@
+/* ============================================
+   DRAMATIC ANIMATED BACKGROUND
+   ============================================ */
 .analytics-page {
-  padding: 24px;
+  padding: 32px;
   width: 100%;
   height: 100%;
   overflow-y: auto;
+  position: relative;
+  background: linear-gradient(135deg, #0a1929 0%, #1a2f4a 50%, #0a1929 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  min-height: 100vh;
 }
 
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.analytics-page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(72, 202, 228, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72, 202, 228, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+.analytics-page::after {
+  content: '';
+  position: fixed;
+  top: 20%;
+  right: 10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(72, 202, 228, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: floatOrb 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -50px) scale(1.2); }
+  66% { transform: translate(-30px, 30px) scale(0.8); }
+}
+
+/* ============================================
+   DRAMATIC PAGE HEADER
+   ============================================ */
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: rgba(19, 47, 76, 0.4);
+  backdrop-filter: blur(30px);
+  border-radius: 24px;
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(72, 202, 228, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
+  animation: headerGlow 3s ease-in-out infinite;
+}
+
+@keyframes headerGlow {
+  0%, 100% {
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(72, 202, 228, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 40px rgba(72, 202, 228, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(72, 202, 228, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 60px rgba(72, 202, 228, 0.4);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #48CAE4, #00B4D8, #0077B6, #48CAE4);
+  background-size: 400% 400%;
+  border-radius: 24px;
+  z-index: -1;
+  animation: borderRotate 4s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: 28px;
-  color: var(--text-primary, #333);
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #48CAE4 0%, #90E0EF 50%, #48CAE4 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -1px;
+  animation: textShimmer 3s ease-in-out infinite, fadeInUp 0.8s ease-out;
+  text-shadow: 0 0 30px rgba(72, 202, 228, 0.5);
+  filter: drop-shadow(0 0 20px rgba(72, 202, 228, 0.8));
 }
 
+@keyframes textShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   DRAMATIC STAT CARDS
+   ============================================ */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .stat-card {
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border, #ddd);
-  border-radius: 12px;
-  padding: 24px;
+  background: rgba(19, 47, 76, 0.6);
+  backdrop-filter: blur(30px);
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  border-radius: 24px;
+  padding: 32px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 24px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: cardFloatIn 0.8s ease-out both;
+  animation-delay: calc(var(--index, 0) * 0.15s);
+}
+
+@keyframes cardFloatIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9) rotateX(10deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  transform: scaleY(0);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(72, 202, 228, 0.8);
+}
+
+.stat-card:hover::before {
+  transform: scaleY(1);
+}
+
+.stat-card:hover {
+  transform: translateY(-12px) scale(1.03) rotateY(2deg);
+  box-shadow: 
+    0 20px 60px rgba(72, 202, 228, 0.4),
+    0 0 0 2px rgba(72, 202, 228, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 80px rgba(72, 202, 228, 0.3);
+  border-color: #48CAE4;
+  background: rgba(19, 47, 76, 0.8);
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 36px;
+  background: linear-gradient(135deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  color: white;
+  box-shadow: 
+    0 8px 24px rgba(72, 202, 228, 0.5),
+    0 0 0 4px rgba(72, 202, 228, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(72, 202, 228, 0.5),
+      0 0 0 4px rgba(72, 202, 228, 0.2),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 8px 24px rgba(72, 202, 228, 0.7),
+      0 0 0 8px rgba(72, 202, 228, 0.3),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.2) rotate(360deg);
+  box-shadow: 
+    0 12px 32px rgba(72, 202, 228, 0.7),
+    0 0 0 6px rgba(72, 202, 228, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  animation: none;
 }
 
 .stat-content {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .stat-content h3 {
-  margin: 0 0 4px 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text-primary, #333);
+  margin: 0 0 8px 0;
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #48CAE4 0%, #90E0EF 50%, #48CAE4 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -2px;
+  transition: all 0.3s ease;
+  animation: textShimmer 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px rgba(72, 202, 228, 0.6));
+}
+
+.stat-card:hover .stat-content h3 {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 25px rgba(72, 202, 228, 0.8));
 }
 
 .stat-content p {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  color: var(--text-secondary, #666);
-  font-weight: 500;
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .stat-subtitle {
-  font-size: 12px;
-  color: var(--text-secondary, #666);
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
+/* ============================================
+   DRAMATIC CHART CARDS
+   ============================================ */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .chart-card {
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border, #ddd);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: rgba(19, 47, 76, 0.6);
+  backdrop-filter: blur(30px);
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  border-radius: 24px;
+  padding: 36px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: cardFloatIn 0.8s ease-out both;
+  animation-delay: calc(var(--index, 0) * 0.2s);
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  background-size: 200% 100%;
+  transform: scaleX(0);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: topBorderShimmer 3s ease-in-out infinite;
+}
+
+@keyframes topBorderShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.chart-card:hover::before {
+  transform: scaleX(1);
+}
+
+.chart-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 60px rgba(72, 202, 228, 0.3),
+    0 0 0 2px rgba(72, 202, 228, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 80px rgba(72, 202, 228, 0.2);
+  border-color: #48CAE4;
+  background: rgba(19, 47, 76, 0.8);
 }
 
 .chart-card h2 {
-  margin: 0 0 24px 0;
-  font-size: 20px;
-  color: var(--text-primary, #333);
+  margin: 0 0 32px 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, #48CAE4 0%, #90E0EF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(72, 202, 228, 0.5);
 }
 
+/* ============================================
+   DRAMATIC MODALITY BARS
+   ============================================ */
 .modality-chart {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .modality-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .modality-header {
@@ -108,39 +401,74 @@
 }
 
 .modality-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary, #333);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .modality-count {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary, #666);
+  font-size: 18px;
+  font-weight: 800;
+  color: #48CAE4;
+  text-shadow: 0 0 10px rgba(72, 202, 228, 0.6);
 }
 
 .modality-bar {
   width: 100%;
-  height: 8px;
-  background: var(--bg-secondary, #f0f0f0);
-  border-radius: 4px;
+  height: 12px;
+  background: rgba(19, 47, 76, 0.6);
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .modality-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0D7377 0%, #14A085 100%);
-  border-radius: 4px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 0 20px rgba(72, 202, 228, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: barShimmer 2s ease-in-out infinite;
 }
 
+@keyframes barShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.modality-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ============================================
+   DRAMATIC DAILY BARS
+   ============================================ */
 .daily-chart {
   display: flex;
   align-items: flex-end;
   justify-content: space-around;
-  gap: 12px;
-  height: 200px;
-  padding: 20px 0;
+  gap: 16px;
+  height: 240px;
+  padding: 24px 0;
 }
 
 .daily-bar-container {
@@ -148,121 +476,179 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   height: 100%;
 }
 
 .daily-bar {
   width: 100%;
-  background: linear-gradient(180deg, #0D7377 0%, #14A085 100%);
-  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  background-size: 100% 200%;
+  border-radius: 8px 8px 0 0;
   position: relative;
   min-height: 20px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 4px;
-  transition: all 0.3s ease;
+  padding-top: 6px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  box-shadow: 
+    0 4px 16px rgba(72, 202, 228, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: barGrow 1s cubic-bezier(0.4, 0, 0.2, 1) both, barShimmer 3s ease-in-out infinite;
+  animation-delay: calc(var(--index, 0) * 0.15s), 1s;
+}
+
+@keyframes barGrow {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 .daily-bar:hover {
-  opacity: 0.8;
+  transform: scaleY(1.1);
+  box-shadow: 
+    0 8px 24px rgba(72, 202, 228, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  filter: brightness(1.2);
 }
 
 .daily-count {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 800;
   color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .daily-label {
-  font-size: 12px;
-  color: var(--text-secondary, #666);
+  font-size: 13px;
+  color: var(--text-secondary);
   text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
+/* ============================================
+   DRAMATIC STATUS ITEMS
+   ============================================ */
 .reports-breakdown {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .status-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .status-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg-secondary, #f5f5f5);
-  border-radius: 8px;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(19, 47, 76, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 2px solid rgba(72, 202, 228, 0.2);
+  transition: all 0.4s ease;
+}
+
+.status-item:hover {
+  transform: translateX(8px);
+  box-shadow: 0 8px 24px rgba(72, 202, 228, 0.2);
+  border-color: rgba(72, 202, 228, 0.5);
 }
 
 .status-indicator {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
+  box-shadow: 
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+  animation: indicatorPulse 2s ease-in-out infinite;
+}
+
+@keyframes indicatorPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
 }
 
 .status-indicator.normal {
-  background: #28a745;
+  background: #10b981;
+  color: #10b981;
 }
 
 .status-indicator.warning {
-  background: #ffc107;
+  background: #f59e0b;
+  color: #f59e0b;
 }
 
 .status-indicator.critical {
-  background: #dc3545;
+  background: #ef4444;
+  color: #ef4444;
 }
 
 .status-label {
   flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary, #333);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .status-count {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary, #333);
+  font-size: 24px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #48CAE4 0%, #90E0EF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(72, 202, 228, 0.6));
 }
 
+/* Dark theme */
 [data-theme="dark"] .analytics-page {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .page-header h1,
 [data-theme="dark"] .stat-content h3,
 [data-theme="dark"] .chart-card h2,
 [data-theme="dark"] .modality-name,
-[data-theme="dark"] .status-label,
-[data-theme="dark"] .status-count {
-  color: var(--text-primary, #fff);
+[data-theme="dark"] .status-label {
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .stat-card,
 [data-theme="dark"] .chart-card {
-  background: var(--card-bg, #2a2a2a);
-  border-color: var(--border, #444);
+  background: rgba(19, 47, 76, 0.8);
+  border-color: rgba(72, 202, 228, 0.3);
 }
 
 [data-theme="dark"] .stat-content p,
 [data-theme="dark"] .stat-subtitle,
 [data-theme="dark"] .modality-count,
 [data-theme="dark"] .daily-label {
-  color: var(--text-secondary, #aaa);
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .modality-bar {
-  background: var(--bg-secondary, #3a3a3a);
+  background: rgba(19, 47, 76, 0.6);
 }
 
 [data-theme="dark"] .status-item {
-  background: var(--bg-secondary, #3a3a3a);
+  background: rgba(19, 47, 76, 0.6);
 }
-

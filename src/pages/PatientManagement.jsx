@@ -3,13 +3,12 @@ import { useData } from '../context/DataContext'
 import Navigation from '../components/Navigation'
 import { format } from 'date-fns'
 import './PatientManagement.css'
-import { FiSearch, FiFilter, FiPlus, FiCalendar, FiUser, FiTrash2 } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiCalendar, FiUser, FiTrash2 } from 'react-icons/fi'
 
 const PatientManagement = () => {
-  const { patients, studies, addPatient, deletePatient } = useData()
+  const { patients, studies, deletePatient } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [showAddModal, setShowAddModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
 
   const filteredPatients = useMemo(() => {
@@ -75,53 +74,6 @@ const PatientManagement = () => {
     }
   }
 
-  const handleAddPatient = async (e) => {
-    e.preventDefault()
-    try {
-      const formData = new FormData(e.target)
-      const dob = formData.get('dob')
-      const gender = formData.get('gender')
-      const patientId = formData.get('id')
-      
-      // Validate required fields
-      if (!dob || !gender) {
-        alert('Please fill in all required fields (Date of Birth and Gender)')
-        return
-      }
-      
-      // Check for duplicate patient ID
-      const existingPatient = patients.find(p => {
-        const existingId = p.patientId || p._id || p.id
-        return existingId?.toString().toLowerCase() === patientId?.toString().toLowerCase()
-      })
-      
-      if (existingPatient) {
-        alert(`Patient with ID "${patientId}" already exists. Please use a different Patient ID.`)
-        return
-      }
-      
-      const newPatient = {
-        name: formData.get('name'),
-        patientId: patientId, // Backend expects 'patientId', not 'id'
-        email: formData.get('email') || undefined,
-        dateOfBirth: dob,
-        gender: gender,
-        status: 'active'
-      }
-      
-      await addPatient(newPatient)
-      setShowAddModal(false)
-      e.target.reset()
-    } catch (error) {
-      console.error('Error adding patient:', error)
-      // Check if error is about duplicate patient ID
-      if (error.message && error.message.includes('already exists')) {
-        alert(error.message)
-      } else {
-        alert(error.message || 'Failed to add patient. Please try again.')
-      }
-    }
-  }
 
   return (
     <div className="page-container">
@@ -129,9 +81,6 @@ const PatientManagement = () => {
       <div className="patient-management">
       <div className="page-header">
         <h1>Patient Management</h1>
-        <button className="add-button" onClick={() => setShowAddModal(true)}>
-          <FiPlus /> Add Patient
-        </button>
       </div>
 
       <div className="filters-section">
@@ -159,7 +108,6 @@ const PatientManagement = () => {
           <div className="empty-state">
             <FiUser size={48} />
             <p>No patients found</p>
-            <button onClick={() => setShowAddModal(true)}>Add First Patient</button>
           </div>
         ) : (
           filteredPatients.map(patient => {
@@ -227,47 +175,6 @@ const PatientManagement = () => {
           })
         )}
       </div>
-
-      {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Add New Patient</h2>
-            <form onSubmit={handleAddPatient}>
-              <div className="form-group">
-                <label>Name *</label>
-                <input type="text" name="name" required />
-              </div>
-              <div className="form-group">
-                <label>Patient ID *</label>
-                <input type="text" name="id" required />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" name="email" />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Date of Birth *</label>
-                  <input type="date" name="dob" required />
-                </div>
-                <div className="form-group">
-                  <label>Gender *</label>
-                  <select name="gender" required>
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit">Add Patient</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {selectedPatient && (
         <div className="modal-overlay" onClick={() => setSelectedPatient(null)}>

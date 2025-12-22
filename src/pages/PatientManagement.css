@@ -1,383 +1,991 @@
+/* ============================================
+   DRAMATIC ANIMATED BACKGROUND
+   ============================================ */
 .patient-management {
-  padding: 24px;
+  padding: 32px;
   width: 100%;
   height: 100%;
   overflow-y: auto;
+  position: relative;
+  background: linear-gradient(135deg, #0a1929 0%, #1a2f4a 50%, #0a1929 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  min-height: 100vh;
 }
 
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Animated grid overlay */
+.patient-management::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(72, 202, 228, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72, 202, 228, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+/* Floating orbs */
+.patient-management::after {
+  content: '';
+  position: fixed;
+  top: 20%;
+  right: 10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(72, 202, 228, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: floatOrb 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -50px) scale(1.2); }
+  66% { transform: translate(-30px, 30px) scale(0.8); }
+}
+
+/* ============================================
+   DRAMATIC PAGE HEADER
+   ============================================ */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: rgba(19, 47, 76, 0.4);
+  backdrop-filter: blur(30px);
+  border-radius: 24px;
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(72, 202, 228, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
+  animation: headerGlow 3s ease-in-out infinite;
+}
+
+@keyframes headerGlow {
+  0%, 100% {
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(72, 202, 228, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 40px rgba(72, 202, 228, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(72, 202, 228, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 60px rgba(72, 202, 228, 0.4);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #48CAE4, #00B4D8, #0077B6, #48CAE4);
+  background-size: 400% 400%;
+  border-radius: 24px;
+  z-index: -1;
+  animation: borderRotate 4s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: 28px;
-  color: var(--text-primary, #333);
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #48CAE4 0%, #90E0EF 50%, #48CAE4 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -1px;
+  animation: textShimmer 3s ease-in-out infinite, fadeInUp 0.8s ease-out;
+  text-shadow: 0 0 30px rgba(72, 202, 228, 0.5);
+  filter: drop-shadow(0 0 20px rgba(72, 202, 228, 0.8));
 }
 
+@keyframes textShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   DRAMATIC ADD BUTTON
+   ============================================ */
 .add-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: var(--primary, #0D7377);
+  gap: 12px;
+  padding: 18px 36px;
+  background: linear-gradient(135deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  background-size: 200% 200%;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 16px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  transition: background 0.2s;
+  font-size: 18px;
+  font-weight: 700;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 24px rgba(72, 202, 228, 0.4),
+    0 0 0 0 rgba(72, 202, 228, 0.5);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  animation: buttonPulse 2s ease-in-out infinite, fadeInUp 0.8s ease-out 0.3s both;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes buttonPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(72, 202, 228, 0.4),
+      0 0 0 0 rgba(72, 202, 228, 0.5);
+    background-position: 0% 50%;
+  }
+  50% {
+    box-shadow: 
+      0 8px 24px rgba(72, 202, 228, 0.6),
+      0 0 0 10px rgba(72, 202, 228, 0);
+    background-position: 100% 50%;
+  }
+}
+
+.add-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.8s, height 0.8s;
+  z-index: -1;
+}
+
+.add-button:hover::before {
+  width: 400px;
+  height: 400px;
 }
 
 .add-button:hover {
-  background: var(--primary-dark, #0A5D61);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 
+    0 16px 40px rgba(72, 202, 228, 0.6),
+    0 0 0 0 rgba(72, 202, 228, 0.7);
+  animation: none;
 }
 
+.add-button:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* ============================================
+   DRAMATIC SEARCH BOXES
+   ============================================ */
 .filters-section {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 20px;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .search-box,
 .filter-box {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border, #ddd);
-  border-radius: 8px;
+  gap: 14px;
+  padding: 18px 24px;
+  background: rgba(19, 47, 76, 0.5);
+  backdrop-filter: blur(30px);
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  border-radius: 16px;
   flex: 1;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
-.search-box input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  color: var(--text-primary, #333);
-  background: transparent;
+.search-box::before,
+.filter-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(72, 202, 228, 0.2), transparent);
+  transition: left 0.6s;
 }
 
+.search-box:hover::before,
+.filter-box:hover::before {
+  left: 100%;
+}
+
+.search-box:focus-within,
+.filter-box:focus-within {
+  border-color: #48CAE4;
+  box-shadow: 
+    0 0 0 4px rgba(72, 202, 228, 0.2),
+    0 12px 32px rgba(72, 202, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 40px rgba(72, 202, 228, 0.4);
+  transform: translateY(-4px) scale(1.02);
+  background: rgba(19, 47, 76, 0.7);
+}
+
+.search-box input,
 .filter-box select {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 14px;
-  color: var(--text-primary, #333);
+  font-size: 16px;
+  color: var(--text-primary);
   background: transparent;
-  cursor: pointer;
+  font-weight: 500;
 }
 
+.search-box svg,
+.filter-box svg {
+  font-size: 20px;
+  color: #48CAE4;
+  filter: drop-shadow(0 0 8px rgba(72, 202, 228, 0.6));
+}
+
+/* ============================================
+   DRAMATIC PATIENT CARDS
+   ============================================ */
 .patients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .patient-card {
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border, #ddd);
-  border-radius: 12px;
-  padding: 20px;
+  background: rgba(19, 47, 76, 0.6);
+  backdrop-filter: blur(30px);
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  border-radius: 24px;
+  padding: 28px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: cardFloatIn 0.8s ease-out both;
+  animation-delay: calc(var(--index, 0) * 0.1s);
+}
+
+@keyframes cardFloatIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9) rotateX(10deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+.patient-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
+  transform: scaleY(0);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(72, 202, 228, 0.8);
+}
+
+.patient-card:hover::before {
+  transform: scaleY(1);
+}
+
+.patient-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(72, 202, 228, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
 }
 
 .patient-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  transform: translateY(-12px) scale(1.03) rotateY(2deg);
+  box-shadow: 
+    0 20px 60px rgba(72, 202, 228, 0.4),
+    0 0 0 2px rgba(72, 202, 228, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 80px rgba(72, 202, 228, 0.3);
+  border-color: #48CAE4;
+  background: rgba(19, 47, 76, 0.8);
 }
 
-.patient-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+.patient-card:hover::after {
+  opacity: 1;
 }
 
+/* ============================================
+   DRAMATIC AVATAR
+   ============================================ */
 .patient-avatar {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--primary, #0D7377);
+  background: linear-gradient(135deg, #48CAE4 0%, #00B4D8 50%, #0077B6 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: 800;
+  box-shadow: 
+    0 8px 24px rgba(72, 202, 228, 0.5),
+    0 0 0 4px rgba(72, 202, 228, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(72, 202, 228, 0.5),
+      0 0 0 4px rgba(72, 202, 228, 0.2),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 8px 24px rgba(72, 202, 228, 0.7),
+      0 0 0 8px rgba(72, 202, 228, 0.3),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.patient-card:hover .patient-avatar {
+  transform: scale(1.15) rotate(360deg);
+  box-shadow: 
+    0 12px 32px rgba(72, 202, 228, 0.7),
+    0 0 0 6px rgba(72, 202, 228, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  animation: none;
+}
+
+/* ============================================
+   DRAMATIC STATUS BADGES
+   ============================================ */
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: badgeGlow 2s ease-in-out infinite;
+}
+
+@keyframes badgeGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+.status-badge.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.4) 100%);
+  color: #10b981;
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    0 4px 16px rgba(16, 185, 129, 0.4),
+    0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.inactive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.4) 100%);
+  color: #ef4444;
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 
+    0 4px 16px rgba(239, 68, 68, 0.4),
+    0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.status-badge:hover {
+  transform: scale(1.1);
+  filter: brightness(1.3);
+}
+
+/* ============================================
+   DRAMATIC DELETE BUTTON
+   ============================================ */
+.delete-patient-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 18px;
+  box-shadow: 
+    0 6px 20px rgba(239, 68, 68, 0.4),
+    0 0 0 0 rgba(239, 68, 68, 0.5);
+  position: relative;
+  overflow: hidden;
+  animation: deletePulse 2s ease-in-out infinite;
+}
+
+@keyframes deletePulse {
+  0%, 100% {
+    box-shadow: 
+      0 6px 20px rgba(239, 68, 68, 0.4),
+      0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 
+      0 6px 20px rgba(239, 68, 68, 0.6),
+      0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+.delete-patient-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 10px 30px rgba(239, 68, 68, 0.6),
+    0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: none;
+}
+
+/* ============================================
+   REST OF STYLES
+   ============================================ */
+.patient-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(72, 202, 228, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.patient-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, #48CAE4, transparent);
+  border-radius: 2px;
 }
 
 .patient-info {
   flex: 1;
+  min-width: 0;
 }
 
 .patient-info h3 {
-  margin: 0 0 4px 0;
-  font-size: 18px;
-  color: var(--text-primary, #333);
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(72, 202, 228, 0.4);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .patient-id {
   margin: 0;
   font-size: 14px;
-  color: var(--text-secondary, #666);
-}
-
-.delete-patient-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 16px;
-}
-
-.delete-patient-btn:hover {
-  background: #c82333;
-  transform: scale(1.05);
-}
-
-.delete-patient-btn:active {
-  transform: scale(0.95);
-}
-
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
+  color: #48CAE4;
   font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-badge.active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-badge.inactive {
-  background: #f8d7da;
-  color: #721c24;
+  text-shadow: 0 1px 4px rgba(72, 202, 228, 0.3);
+  letter-spacing: 0.3px;
 }
 
 .patient-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(19, 47, 76, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(72, 202, 228, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.patient-details::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #48CAE4, transparent);
+  border-radius: 16px 16px 0 0;
+  opacity: 0.6;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(72, 202, 228, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(72, 202, 228, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, #48CAE4 0%, #00B4D8 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.detail-item:hover {
+  background: rgba(72, 202, 228, 0.1);
+  border-color: rgba(72, 202, 228, 0.3);
+  transform: translateX(4px);
+}
+
+.detail-item:hover::before {
+  opacity: 1;
 }
 
 .detail-item .label {
-  font-size: 12px;
-  color: var(--text-secondary, #666);
+  font-size: 11px;
+  color: #48CAE4;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-item .label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(72, 202, 228, 0.3), transparent);
 }
 
 .detail-item .value {
-  font-size: 14px;
-  color: var(--text-primary, #333);
+  font-size: 16px;
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(72, 202, 228, 0.2);
+  word-break: break-word;
+}
+
+.detail-item .value:empty::before {
+  content: 'N/A';
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
 }
 
 .recent-study {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border, #ddd);
-  font-size: 13px;
-  color: var(--text-secondary, #666);
+  gap: 12px;
+  padding: 16px 20px;
+  margin-top: 8px;
+  background: rgba(72, 202, 228, 0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(72, 202, 228, 0.2);
+  font-size: 14px;
+  color: #48CAE4;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.recent-study::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #48CAE4 0%, #00B4D8 100%);
+  border-radius: 12px 0 0 12px;
+}
+
+.recent-study:hover {
+  background: rgba(72, 202, 228, 0.15);
+  border-color: rgba(72, 202, 228, 0.4);
+  transform: translateX(4px);
+}
+
+.recent-study svg {
+  font-size: 18px;
+  filter: drop-shadow(0 2px 4px rgba(72, 202, 228, 0.4));
 }
 
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 60px 20px;
-  color: var(--text-secondary, #666);
+  padding: 80px 20px;
+  color: var(--text-secondary);
+  background: rgba(19, 47, 76, 0.4);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 2px dashed rgba(72, 202, 228, 0.3);
 }
 
 .empty-state p {
-  margin: 16px 0;
-  font-size: 16px;
+  margin: 20px 0;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .empty-state button {
-  padding: 12px 24px;
-  background: var(--primary, #0D7377);
+  padding: 16px 32px;
+  background: var(--gradient-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(72, 202, 228, 0.4);
+  transition: all 0.3s ease;
 }
 
+.empty-state button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(72, 202, 228, 0.6);
+}
+
+/* ============================================
+   DRAMATIC MODALS
+   ============================================ */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .modal-content {
-  background: var(--card-bg, #fff);
-  border-radius: 12px;
-  padding: 24px;
+  background: rgba(19, 47, 76, 0.95);
+  backdrop-filter: blur(40px);
+  border: 2px solid rgba(72, 202, 228, 0.4);
+  border-radius: 28px;
+  padding: 40px;
   max-width: 500px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(72, 202, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 100px rgba(72, 202, 228, 0.3);
+  animation: modalSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(40px) rotateX(10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotateX(0deg);
+  }
 }
 
 .modal-content h2 {
-  margin: 0 0 24px 0;
-  color: var(--text-primary, #333);
+  margin: 0 0 32px 0;
+  color: var(--text-primary);
+  font-size: 32px;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary, #333);
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 6px;
-  font-size: 14px;
-  color: var(--text-primary, #333);
-  background: var(--bg-primary, #fff);
+  padding: 14px 18px;
+  border: 2px solid rgba(72, 202, 228, 0.3);
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--text-primary);
+  background: rgba(19, 47, 76, 0.5);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #48CAE4;
+  box-shadow: 
+    0 0 0 4px rgba(72, 202, 228, 0.1),
+    0 8px 24px rgba(72, 202, 228, 0.2);
+  background: rgba(19, 47, 76, 0.7);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 20px;
 }
 
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: flex-end;
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .modal-actions button {
-  padding: 10px 20px;
+  padding: 14px 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.3s ease;
 }
 
 .modal-actions button[type="button"] {
-  background: var(--bg-secondary, #f5f5f5);
-  color: var(--text-primary, #333);
+  background: rgba(19, 47, 76, 0.6);
+  color: var(--text-primary);
+  border: 2px solid rgba(72, 202, 228, 0.3);
+}
+
+.modal-actions button[type="button"]:hover {
+  background: rgba(19, 47, 76, 0.8);
+  border-color: #48CAE4;
 }
 
 .modal-actions button[type="submit"] {
-  background: var(--primary, #0D7377);
+  background: var(--gradient-primary);
   color: white;
+  box-shadow: 0 6px 20px rgba(72, 202, 228, 0.4);
+}
+
+.modal-actions button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(72, 202, 228, 0.6);
 }
 
 .patient-detail-modal {
-  background: var(--card-bg, #fff);
-  border-radius: 12px;
-  padding: 24px;
+  background: rgba(19, 47, 76, 0.95);
+  backdrop-filter: blur(40px);
+  border: 2px solid rgba(72, 202, 228, 0.4);
+  border-radius: 28px;
+  padding: 40px;
   max-width: 600px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(72, 202, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 100px rgba(72, 202, 228, 0.3);
+  animation: modalSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .patient-detail-modal h2 {
-  margin: 0 0 24px 0;
-  color: var(--text-primary, #333);
+  margin: 0 0 32px 0;
+  color: var(--text-primary);
+  font-size: 32px;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .patient-timeline {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .timeline-item {
   display: flex;
-  gap: 16px;
-  padding: 16px;
-  background: var(--bg-secondary, #f5f5f5);
-  border-radius: 8px;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(19, 47, 76, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border-left: 4px solid #48CAE4;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+  transform: translateX(8px);
+  box-shadow: 0 8px 24px rgba(72, 202, 228, 0.2);
 }
 
 .timeline-date {
   min-width: 140px;
-  font-size: 13px;
-  color: var(--text-secondary, #666);
-  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .timeline-content h4 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  color: var(--text-primary, #333);
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .timeline-content p {
   margin: 0;
-  font-size: 14px;
-  color: var(--text-secondary, #666);
+  font-size: 15px;
+  color: var(--text-secondary);
 }
 
 .close-modal {
-  margin-top: 24px;
-  padding: 10px 20px;
-  background: var(--primary, #0D7377);
+  margin-top: 32px;
+  padding: 16px 32px;
+  background: var(--gradient-primary);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
   width: 100%;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(72, 202, 228, 0.4);
+  transition: all 0.3s ease;
 }
 
+.close-modal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(72, 202, 228, 0.6);
+}
+
+/* Dark theme overrides */
 [data-theme="dark"] .patient-management {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .page-header h1 {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .search-box,
@@ -385,14 +993,14 @@
 [data-theme="dark"] .patient-card,
 [data-theme="dark"] .modal-content,
 [data-theme="dark"] .patient-detail-modal {
-  background: var(--card-bg, #2a2a2a);
-  border-color: var(--border, #444);
+  background: rgba(19, 47, 76, 0.8);
+  border-color: rgba(72, 202, 228, 0.3);
 }
 
 [data-theme="dark"] .patient-info h3,
 [data-theme="dark"] .detail-item .value,
 [data-theme="dark"] .timeline-content h4 {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .patient-id,
@@ -400,22 +1008,21 @@
 [data-theme="dark"] .recent-study,
 [data-theme="dark"] .timeline-date,
 [data-theme="dark"] .timeline-content p {
-  color: var(--text-secondary, #aaa);
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .form-group input,
 [data-theme="dark"] .form-group select {
-  background: var(--bg-primary, #1a1a1a);
-  border-color: var(--border, #444);
-  color: var(--text-primary, #fff);
+  background: rgba(19, 47, 76, 0.6);
+  border-color: rgba(72, 202, 228, 0.3);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .timeline-item {
-  background: var(--bg-secondary, #3a3a3a);
+  background: rgba(19, 47, 76, 0.6);
 }
 
 [data-theme="dark"] .modal-actions button[type="button"] {
-  background: var(--bg-secondary, #3a3a3a);
-  color: var(--text-primary, #fff);
+  background: rgba(19, 47, 76, 0.6);
+  color: var(--text-primary);
 }
-

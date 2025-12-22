@@ -9,11 +9,16 @@ const { protect } = require('../middleware/auth');
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, role } = req.body;
 
     // Validate input
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({ error: 'Please provide all required fields' });
+    }
+
+    // Validate role if provided
+    if (role && !['doctor', 'radiologist', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be doctor, radiologist, or admin' });
     }
 
     // Check if user exists
@@ -27,7 +32,8 @@ router.post('/register', async (req, res) => {
       email,
       password,
       firstName,
-      lastName
+      lastName,
+      role: role || 'doctor' // Use provided role or default to 'doctor'
     });
 
     await user.save();
