@@ -5,7 +5,7 @@
   width: 100%;
   min-height: 100vh;
   position: relative;
-  /* GPU acceleration */
+  /* GPU acceleration - force hardware acceleration */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   /* Optimize rendering */
@@ -13,41 +13,103 @@
   /* Smooth rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent layout shifts and hide overflow for swipe effect */
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Additional performance optimizations */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
 }
 
-.page-transition-entering {
-  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  will-change: transform, opacity, filter;
+/* Forward swipe (swiping left - new page from right) */
+.page-transition-entering.page-transition-forward {
+  animation: swipeInFromRight 0.65s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  will-change: transform, opacity;
 }
 
-.page-transition-exiting {
-  animation: pageExit 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  will-change: transform, opacity, filter;
+.page-transition-exiting.page-transition-forward {
+  animation: swipeOutToLeft 0.55s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+  will-change: transform, opacity;
 }
 
-@keyframes pageEnter {
-  from {
+/* Backward swipe (swiping right - new page from left) */
+.page-transition-entering.page-transition-backward {
+  animation: swipeInFromLeft 0.65s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.page-transition-exiting.page-transition-backward {
+  animation: swipeOutToRight 0.55s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+  will-change: transform, opacity;
+}
+
+/* Forward animations - Ultra smooth with subtle scale and refined opacity */
+@keyframes swipeInFromRight {
+  0% {
     opacity: 0;
-    transform: translate3d(0, 20px, 0) scale(0.98);
-    filter: blur(4px);
+    transform: translate3d(100%, 0, 0) scale(0.97);
   }
-  to {
+  30% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 0.7;
+    transform: translate3d(5%, 0, 0) scale(0.99);
+  }
+  100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
   }
 }
 
-@keyframes pageExit {
-  from {
+@keyframes swipeOutToLeft {
+  0% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
   }
-  to {
+  40% {
+    opacity: 0.6;
+  }
+  100% {
     opacity: 0;
-    transform: translate3d(0, -20px, 0) scale(0.98);
-    filter: blur(4px);
+    transform: translate3d(-100%, 0, 0) scale(0.97);
+  }
+}
+
+/* Backward animations - Ultra smooth with subtle scale and refined opacity */
+@keyframes swipeInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-100%, 0, 0) scale(0.97);
+  }
+  30% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 0.7;
+    transform: translate3d(-5%, 0, 0) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes swipeOutToRight {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  40% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(100%, 0, 0) scale(0.97);
   }
 }
 
