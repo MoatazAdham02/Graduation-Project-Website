@@ -13,6 +13,7 @@ import Analytics from './pages/Analytics'
 import HomePage from './pages/HomePage'
 import Chatbot from './components/Chatbot'
 import PageTransition from './components/PageTransition'
+import CustomNotificationContainer from './components/CustomNotificationContainer'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
@@ -128,6 +129,7 @@ function App() {
                 pauseOnHover
                 transition={undefined}
               />
+              <CustomNotificationContainer />
               <Chatbot />
             </Router>
           </NotificationProvider>

@@ -490,9 +490,12 @@ const DICOMViewer = () => {
       // This happens before any database operations so it always succeeds
       const reportData = generateReport(validFiles[0], patientInfo, studyInfo)
       
+      // Generate a report ID that will be used for the notification
+      const reportId = `RPT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      
       // Notify user that report is ready (regardless of database save success)
       // Use the same patient name as in the report for consistency
-      notifyReportReady(reportData.patientName || 'Unknown Patient')
+      notifyReportReady(reportData.patientName || 'Unknown Patient', reportId)
       
       // ALWAYS CREATE REPORT - even if patient/study creation fails
       // This ensures reports are generated for every DICOM upload
@@ -600,7 +603,7 @@ const DICOMViewer = () => {
         
         // Prepare report data - use patient/study if available, otherwise use fallbacks
         const reportPayload = {
-          reportId: `RPT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Ensure unique ID
+          reportId: reportId, // Use the same ID generated earlier for consistency
           patientName: patient?.name || reportData.patientName || 'Unknown Patient',
           findings: reportData.findings || [],
           recommendations: reportData.recommendations || [],

@@ -22,3 +22,22 @@
   /* Optimize scrolling performance */
   will-change: scroll-position;
 }
+
+/* Custom Toast Notification Styles */
+.report-ready-toast {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin: 0 0 16px 0 !important;
+}
+
+/* Override default toast container for custom notifications */
+.Toastify__toast-container--top-right {
+  padding: 20px;
+}
+
+.Toastify__toast--custom {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}

@@ -442,10 +442,12 @@ const Reports = () => {
             </div>
           ) : (
             filteredReports.map(report => (
-              <div 
+              <div
                 key={report._id || report.id || report.reportId} 
                 className="report-card"
                 onClick={() => setSelectedReport(report)}
+                data-report-id={report._id || report.id || report.reportId}
+                id={`report-${report._id || report.id || report.reportId}`}
               >
                 <div className="report-card-header">
                   <div className="report-avatar">

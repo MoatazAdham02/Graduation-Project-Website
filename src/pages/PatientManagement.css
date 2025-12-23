@@ -310,11 +310,12 @@
    ============================================ */
 .patients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, 300px);
   gap: 18px;
   width: 100%;
   position: relative;
   z-index: 1;
+  justify-content: start;
 }
 
 .patient-card {
@@ -332,6 +333,10 @@
   overflow: hidden;
   animation: cardFloatIn 0.8s ease-out both;
   animation-delay: calc(var(--index, 0) * 0.1s);
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+  box-sizing: border-box;
 }
 
 @keyframes cardFloatIn {

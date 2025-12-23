@@ -23,7 +23,7 @@ const PageTransition = memo(({ children }) => {
   const prevLocationRef = useRef(location)
 
   useEffect(() => {
-    if (location !== displayLocation) {
+    if (location.pathname !== displayLocation.pathname) {
       // Determine swipe direction
       const currentIndex = getRouteIndex(location.pathname)
       const prevIndex = getRouteIndex(prevLocationRef.current.pathname)

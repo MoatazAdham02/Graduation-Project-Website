@@ -41,9 +41,6 @@ const Register = () => {
         if (!value) return 'Please confirm your password'
         if (value !== formData.password) return 'Passwords do not match'
         return ''
-      case 'role':
-        if (!value) return 'Please select a role'
-        return ''
       default:
         return ''
     }
@@ -99,8 +96,7 @@ const Register = () => {
         lastName: true,
         email: true,
         password: true,
-        confirmPassword: true,
-        role: true
+        confirmPassword: true
       })
       setIsSubmitting(false)
       return
@@ -183,25 +179,6 @@ const Register = () => {
             />
             {errors.email && touched.email && (
               <span className="error-message">{errors.email}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="role">Role</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={errors.role && touched.role ? 'error' : ''}
-            >
-              <option value="doctor">Doctor</option>
-              <option value="radiologist">Radiologist</option>
-              <option value="admin">Admin</option>
-            </select>
-            {errors.role && touched.role && (
-              <span className="error-message">{errors.role}</span>
             )}
           </div>
 
