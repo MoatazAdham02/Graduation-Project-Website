@@ -156,6 +156,30 @@ This directory contains comprehensive study materials for your graduation projec
 
 **When to Use**: Review and practice answers to these questions
 
+### 10. Frontend Q&A for Doctor Discussion
+**File**: `FRONTEND_QA.md`
+
+**Contents**:
+- 15 frontend questions with doctor-friendly explanations
+- Simple, easy-to-understand language
+- Practical examples for each answer
+- Covers React, DICOM viewer, navigation, UI design, authentication, notifications, and more
+- Answers tailored for non-technical audience
+
+**When to Use**: When discussing frontend aspects with doctors or non-technical panel members
+
+### 11. Frontend & Database Technologies
+**File**: `FRONTEND_DATABASE_TECHNOLOGIES.md`
+
+**Contents**:
+- Complete list of all frontend technologies used
+- Complete list of all database technologies used
+- Brief explanations of what each technology does
+- Code examples for each technology
+- Organized by category (Core, Routing, UI, DICOM, Utilities, etc.)
+
+**When to Use**: Quick reference for technology stack questions
+
 ## Study Plan
 
 ### Recommended Study Timeline
