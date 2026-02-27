@@ -55,7 +55,6 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/patients', require('./routes/patients'));
 app.use('/api/studies', require('./routes/studies'));
 app.use('/api/reports', require('./routes/reports'));
-app.use('/api/chatbot', require('./routes/chatbot'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

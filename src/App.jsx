@@ -11,7 +11,6 @@ import PatientManagement from './pages/PatientManagement'
 import Reports from './pages/Reports'
 import Analytics from './pages/Analytics'
 import HomePage from './pages/HomePage'
-import Chatbot from './components/Chatbot'
 import PageTransition from './components/PageTransition'
 import CustomNotificationContainer from './components/CustomNotificationContainer'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -130,7 +129,6 @@ function App() {
                 transition={undefined}
               />
               <CustomNotificationContainer />
-              <Chatbot />
             </Router>
           </NotificationProvider>
         </DataProvider>
